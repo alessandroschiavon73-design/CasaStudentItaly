@@ -48,6 +48,7 @@
         <h2>1. Alloggio e posizione</h2>
         <p>Indica subito che cosa viene affittato e dove si trova.</p>
         <div class="form-grid three">
+          <div class="field"><label for="city">Città *</label><select id="city" name="city" required><option value="">Seleziona</option><option value="milano">Milano</option><option value="torino">Torino</option><option value="trento">Trento</option><option value="padova">Padova</option><option value="trieste">Trieste</option><option value="bologna">Bologna</option><option value="pisa">Pisa</option><option value="firenze">Firenze</option><option value="ancona">Ancona</option><option value="roma">Roma</option><option value="bari">Bari</option><option value="napoli">Napoli</option><option value="cagliari">Cagliari</option><option value="palermo">Palermo</option></select></div>
           <div class="field"><label for="zone">Zona *</label><select id="zone" name="zone" required><option value="">Seleziona</option><option>Arcella</option><option>Portello</option><option>Sacra Famiglia</option><option>Ponte San Nicolò</option><option>Madonna Pellegrina</option><option>Centro</option><option>Forcellini</option><option>Guizza</option></select></div>
           <div class="field"><label for="type">Tipologia *</label><select id="type" name="type" required><option value="">Seleziona</option><option>Stanza singola</option><option>Posto letto in doppia</option><option>Bilocale</option><option>Monolocale</option><option>Appartamento (3 camere)</option></select></div>
           <div class="field"><label for="arrangement">Formula *</label><select id="arrangement" name="arrangement" required><option>In appartamento condiviso</option><option>Appartamento intero</option><option>Residence per studenti</option><option>Formula all inclusive</option></select></div>
@@ -114,7 +115,7 @@
           <div class="field"><label for="phone">Telefono *</label><input id="phone" name="phone" required></div>
           <div class="field"><label for="whatsapp">WhatsApp</label><input id="whatsapp" name="whatsapp" placeholder="Es. +39 340 1234567"></div>
         </div>
-        <div class="notice"><strong>Nota sul prototipo:</strong> la pubblicazione salva l’annuncio nel browser e lo rende visibile nella pagina Padova sullo stesso dispositivo. Per una pubblicazione reale e condivisa da tutti serviranno database, verifica email e pannello di moderazione.</div>
+        <div class="notice"><strong>Nota sul prototipo:</strong> la pubblicazione salva l’annuncio nel browser e lo rende visibile nella pagina della città selezionata sullo stesso dispositivo. Per una pubblicazione reale e condivisa da tutti serviranno database, verifica email e pannello di moderazione.</div>
         <div class="form-actions">
           <button class="btn btn-white" id="preview-button" type="button">Anteprima annuncio</button>
           <button class="btn btn-yellow" type="submit">Salva e pubblica nella demo</button>

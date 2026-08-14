@@ -1,13 +1,14 @@
-STUDENTBNB — PROPOSTA 1, PROTOTIPO OPERATIVO
+STUDENTBNB — PROPOSTA 1, VERSIONE MULTICITTÀ PUBBLICABILE
 ================================================
 
 Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - header giallo e identità StudentBnB;
 - grande mappa illustrata dell’Italia con città e monumenti;
-- navigazione dalla mappa alla città;
-- pagina Padova con filtri e annunci;
+- navigazione dalla mappa a 14 città universitarie italiane;
+- esattamente 3 annunci dimostrativi fittizi per ogni città (42 totali);
+- pagina città dinamica con filtri e annunci pertinenti;
 - scheda annuncio completa e orientata alla trasparenza commerciale;
-- modulo di pubblicazione con costi, spese, deposito, durata e preavviso;
+- modulo di pubblicazione con scelta della città, costi, spese, deposito, durata e preavviso;
 - preferiti, ricerca, filtri, galleria e annunci demo funzionanti;
 - layout responsive per computer, tablet e smartphone.
 
@@ -29,7 +30,7 @@ moderazione, gestione immagini e informativa privacy definitiva.
 
 PAGINE
 - index.html: homepage Proposta 1
-- padova.html: elenco annunci e filtri
+- padova.html?city=padova: pagina dinamica per elenco e filtri di ogni città
 - annuncio.html?id=PD-AR-2456: scheda dettaglio
 - pubblica.html: modulo di pubblicazione
 - privacy.html: note demo, privacy e sicurezza

@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="assets/css/style.css">
 
 <title>StudentBnB — Trova la tua stanza nella città universitaria</title>
-<meta name="description" content="Stanze, posti letto e appartamenti per studenti con costi e condizioni confrontabili. StudentBnB parte da Padova.">
+<meta name="description" content="Stanze, posti letto e appartamenti dimostrativi nelle principali città universitarie italiane, con costi e condizioni confrontabili.">
 </head>
 <body>
 
@@ -41,12 +41,11 @@
           <div class="field">
             <label for="home-city">Città universitaria</label>
             <select id="home-city" name="city">
-              <option value="padova">Padova — città pilota</option>
-              <option value="bologna">Bologna — prossimamente</option>
-              <option value="milano">Milano — prossimamente</option>
-              <option value="roma">Roma — prossimamente</option>
-              <option value="torino">Torino — prossimamente</option>
-              <option value="firenze">Firenze — prossimamente</option>
+              <option value="padova">Padova</option><option value="milano">Milano</option><option value="torino">Torino</option>
+              <option value="trento">Trento</option><option value="trieste">Trieste</option><option value="bologna">Bologna</option>
+              <option value="pisa">Pisa</option><option value="firenze">Firenze</option><option value="ancona">Ancona</option>
+              <option value="roma">Roma</option><option value="bari">Bari</option><option value="napoli">Napoli</option>
+              <option value="cagliari">Cagliari</option><option value="palermo">Palermo</option>
             </select>
           </div>
           <div class="field">
@@ -65,14 +64,20 @@
       </div>
       <div class="map-stage" aria-label="Mappa illustrata delle città universitarie italiane">
         <img src="assets/img/italia-proposta1.webp" alt="Mappa illustrata dell'Italia con città universitarie e monumenti">
-        <a class="map-hotspot hot-padova" href="padova.html" aria-label="Apri gli annunci di Padova"></a>
-        <a class="map-hotspot hot-bologna" href="#" data-city-coming="Bologna" aria-label="Bologna, prossimamente"></a>
-        <a class="map-hotspot hot-roma" href="#" data-city-coming="Roma" aria-label="Roma, prossimamente"></a>
-        <a class="map-hotspot hot-milano" href="#" data-city-coming="Milano" aria-label="Milano, prossimamente"></a>
-        <a class="map-hotspot hot-torino" href="#" data-city-coming="Torino" aria-label="Torino, prossimamente"></a>
-        <a class="map-hotspot hot-firenze" href="#" data-city-coming="Firenze" aria-label="Firenze, prossimamente"></a>
-        <a class="map-hotspot hot-napoli" href="#" data-city-coming="Napoli" aria-label="Napoli, prossimamente"></a>
-        <a class="map-hotspot hot-palermo" href="#" data-city-coming="Palermo" aria-label="Palermo, prossimamente"></a>
+        <a class="map-hotspot hot-padova" href="padova.html?city=padova" aria-label="Apri gli annunci di Padova"></a>
+        <a class="map-hotspot hot-bologna" href="padova.html?city=bologna" aria-label="Apri gli annunci di Bologna"></a>
+        <a class="map-hotspot hot-roma" href="padova.html?city=roma" aria-label="Apri gli annunci di Roma"></a>
+        <a class="map-hotspot hot-milano" href="padova.html?city=milano" aria-label="Apri gli annunci di Milano"></a>
+        <a class="map-hotspot hot-torino" href="padova.html?city=torino" aria-label="Apri gli annunci di Torino"></a>
+        <a class="map-hotspot hot-firenze" href="padova.html?city=firenze" aria-label="Apri gli annunci di Firenze"></a>
+        <a class="map-hotspot hot-napoli" href="padova.html?city=napoli" aria-label="Apri gli annunci di Napoli"></a>
+        <a class="map-hotspot hot-palermo" href="padova.html?city=palermo" aria-label="Apri gli annunci di Palermo"></a>
+        <a class="map-hotspot hot-trento" href="padova.html?city=trento" aria-label="Apri gli annunci di Trento"></a>
+        <a class="map-hotspot hot-trieste" href="padova.html?city=trieste" aria-label="Apri gli annunci di Trieste"></a>
+        <a class="map-hotspot hot-pisa" href="padova.html?city=pisa" aria-label="Apri gli annunci di Pisa"></a>
+        <a class="map-hotspot hot-ancona" href="padova.html?city=ancona" aria-label="Apri gli annunci di Ancona"></a>
+        <a class="map-hotspot hot-bari" href="padova.html?city=bari" aria-label="Apri gli annunci di Bari"></a>
+        <a class="map-hotspot hot-cagliari" href="padova.html?city=cagliari" aria-label="Apri gli annunci di Cagliari"></a>
       </div>
     </div>
     <div class="container value-strip" id="come-funziona">
@@ -86,14 +91,14 @@
     <div class="container">
       <h2 class="section-title">Le città più cercate</h2>
       <div class="city-grid">
-        <a class="city-card" href="padova.html"><img src="assets/img/citta-padova.webp" alt="Padova"><strong>Padova</strong></a>
-        <a class="city-card" href="#" data-city-coming="Bologna"><img src="assets/img/citta-bologna.webp" alt="Bologna"><strong>Bologna</strong></a>
-        <a class="city-card" href="#" data-city-coming="Milano"><img src="assets/img/citta-milano.webp" alt="Milano"><strong>Milano</strong></a>
-        <a class="city-card" href="#" data-city-coming="Roma"><img src="assets/img/citta-roma.webp" alt="Roma"><strong>Roma</strong></a>
-        <a class="city-card" href="#" data-city-coming="Torino"><img src="assets/img/citta-torino.webp" alt="Torino"><strong>Torino</strong></a>
-        <a class="city-card" href="#" data-city-coming="Firenze"><img src="assets/img/citta-firenze.webp" alt="Firenze"><strong>Firenze</strong></a>
-        <a class="city-card" href="#" data-city-coming="Pisa"><img src="assets/img/citta-pisa.webp" alt="Pisa"><strong>Pisa</strong></a>
-        <a class="city-card" href="#" data-city-coming="Napoli"><img src="assets/img/citta-napoli.webp" alt="Napoli"><strong>Napoli</strong></a>
+        <a class="city-card" href="padova.html?city=padova"><img src="assets/img/citta-padova.webp" alt="Padova"><strong>Padova</strong></a>
+        <a class="city-card" href="padova.html?city=bologna"><img src="assets/img/citta-bologna.webp" alt="Bologna"><strong>Bologna</strong></a>
+        <a class="city-card" href="padova.html?city=milano"><img src="assets/img/citta-milano.webp" alt="Milano"><strong>Milano</strong></a>
+        <a class="city-card" href="padova.html?city=roma"><img src="assets/img/citta-roma.webp" alt="Roma"><strong>Roma</strong></a>
+        <a class="city-card" href="padova.html?city=torino"><img src="assets/img/citta-torino.webp" alt="Torino"><strong>Torino</strong></a>
+        <a class="city-card" href="padova.html?city=firenze"><img src="assets/img/citta-firenze.webp" alt="Firenze"><strong>Firenze</strong></a>
+        <a class="city-card" href="padova.html?city=pisa"><img src="assets/img/citta-pisa.webp" alt="Pisa"><strong>Pisa</strong></a>
+        <a class="city-card" href="padova.html?city=napoli"><img src="assets/img/citta-napoli.webp" alt="Napoli"><strong>Napoli</strong></a>
       </div>
     </div>
   </section>
@@ -107,7 +112,7 @@
     </div>
     <div class="stats-strip">
       <div class="stat"><span class="stat-icon">▤</span><div><strong>Informazioni complete</strong><span>Non soltanto fotografie</span></div></div>
-      <div class="stat"><span class="stat-icon">⌖</span><div><strong>Città universitarie</strong><span>Partenza da Padova</span></div></div>
+      <div class="stat"><span class="stat-icon">⌖</span><div><strong>Città universitarie</strong><span>14 città italiane navigabili</span></div></div>
       <div class="stat"><span class="stat-icon">◇</span><div><strong>Costi confrontabili</strong><span>Spese e commissioni dichiarate</span></div></div>
       <div class="stat"><span class="stat-icon">◎</span><div><strong>Mobilità europea</strong><span>Università, Erasmus e tirocini</span></div></div>
     </div>
@@ -120,7 +125,7 @@
       <div class="detail-grid">
         <article class="info-card"><h2>Che cosa confronta?</h2><p>Canone, spese, utenze, deposito, durata minima, preavviso, costi di agenzia, servizi e distanze dalle università.</p></article>
         <article class="info-card"><h2>Chi può pubblicare?</h2><p>Privati, agenzie, residence e operatori specializzati, con indicazione chiara di eventuali costi d’intermediazione.</p></article>
-        <article class="info-card"><h2>Dove parte?</h2><p>Padova è il progetto pilota. Il modello potrà essere replicato nelle altre città italiane, in Spagna e progressivamente in Europa.</p></article>
+        <article class="info-card"><h2>Dove è disponibile?</h2><p>Il prototipo è navigabile in 14 città universitarie italiane, con tre annunci dimostrativi chiaramente fittizi per ciascuna città.</p></article>
       </div>
     </div>
   </section>

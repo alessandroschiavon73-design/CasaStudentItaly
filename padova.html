@@ -29,14 +29,14 @@
     </nav>
   </div>
 </header>
-<div class="breadcrumb"><div class="container"><a href="index.html">Home</a><span>›</span><strong>Padova</strong></div></div>
+<div class="breadcrumb"><div class="container"><a href="index.html">Home</a><span>›</span><strong id="city-breadcrumb">Padova</strong></div></div>
 <main>
   <section class="city-hero">
     <div class="city-hero-bg" style="background-image:url('assets/img/padova-hero.webp')"></div>
     <div class="container">
-      <h1>Padova</h1>
-      <h2>358 annunci disponibili</h2>
-      <p>Scopri stanze, posti letto e appartamenti nelle zone universitarie di Padova. Ogni offerta evidenzia costi, spese e condizioni contrattuali.</p>
+      <h1 id="city-name">Padova</h1>
+      <h2 id="city-count">3 annunci dimostrativi disponibili</h2>
+      <p id="city-description">Scopri gli alloggi dimostrativi nelle zone universitarie di Padova. Ogni offerta evidenzia costi, spese e condizioni contrattuali.</p>
       <a class="btn btn-yellow" href="index.html">← Torna alla mappa</a>
     </div>
   </section>
@@ -46,8 +46,6 @@
       <label>Zona
         <select id="filter-zone">
           <option value="">Tutte le zone</option>
-          <option>Arcella</option><option>Portello</option><option>Sacra Famiglia</option>
-          <option>Ponte San Nicolò</option><option>Madonna Pellegrina</option>
         </select>
       </label>
       <label>Tipologia

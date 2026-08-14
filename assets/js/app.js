@@ -101,11 +101,7 @@
         const fd = new FormData(form);
         const city = fd.get("city");
         const type = fd.get("type");
-        if(city !== "padova"){
-          toast("La demo operativa parte da Padova; le altre città saranno attivate progressivamente.");
-          return;
-        }
-        location.href = `padova.html?type=${encodeURIComponent(type || "")}`;
+        location.href = `padova.html?city=${encodeURIComponent(city || "padova")}&type=${encodeURIComponent(type || "")}`;
       });
     }
     qsa("[data-city-coming]").forEach(el => el.addEventListener("click", e => {
@@ -157,6 +153,19 @@
       sort: qs("#filter-sort")
     };
     const params = new URLSearchParams(location.search);
+    const citySlug = params.get("city") || "padova";
+    const city = DATA.cities.find(c => c.slug === citySlug) || DATA.cities.find(c => c.slug === "padova");
+    const cityListings = allListings().filter(l => (l.city || "padova") === city.slug);
+    document.title = `Alloggi per studenti a ${city.name} | StudentBnB`;
+    const cityTitle=qs("#city-name"), cityCount=qs("#city-count"), cityDescription=qs("#city-description"), cityCrumb=qs("#city-breadcrumb");
+    if(cityTitle) cityTitle.textContent=city.name;
+    if(cityCount) cityCount.textContent=`${cityListings.length} annunci dimostrativi disponibili`;
+    if(cityDescription) cityDescription.textContent=`Scopri gli alloggi dimostrativi nelle zone universitarie di ${city.name}. Ogni offerta evidenzia costi, spese e condizioni contrattuali.`;
+    if(cityCrumb) cityCrumb.textContent=city.name;
+    if(controls.zone){
+      const zones=[...new Set(cityListings.map(l=>l.zone))];
+      controls.zone.innerHTML='<option value="">Tutte le zone</option>'+zones.map(z=>`<option>${escapeHtml(z)}</option>`).join('');
+    }
     if(params.get("type") && controls.type){
       const requested = params.get("type");
       const option = [...controls.type.options].find(o => o.value.toLowerCase().includes(requested.toLowerCase()) || requested.toLowerCase().includes(o.value.toLowerCase()));
@@ -164,6 +173,7 @@
     }
     function render(){
       let items = allListings().filter(l => {
+        if((l.city || "padova") !== city.slug) return false;
         if(controls.zone?.value && l.zone !== controls.zone.value) return false;
         if(controls.type?.value && l.type !== controls.type.value) return false;
         if(controls.price?.value && Number(l.price) > Number(controls.price.value)) return false;
@@ -176,7 +186,7 @@
       if(sort === "price-desc") items.sort((a,b) => b.price-a.price);
       if(sort === "zone") items.sort((a,b) => a.zone.localeCompare(b.zone,"it"));
       list.innerHTML = items.length ? items.map(listingCard).join("") : `<div class="empty-state"><h3>Nessun annuncio con questi filtri</h3><p>Prova ad ampliare la zona, il prezzo o la tipologia.</p></div>`;
-      qs("#result-count").textContent = `${items.length} ${items.length === 1 ? "offerta trovata" : "offerte trovate"} nella demo`;
+      qs("#result-count").textContent = `${items.length} ${items.length === 1 ? "offerta dimostrativa trovata" : "offerte dimostrative trovate"} a ${city.name}`;
       setupFavorites();
     }
     Object.values(controls).filter(Boolean).forEach(c => c.addEventListener("change", render));
@@ -192,7 +202,9 @@
     if(!root) return;
     const id = new URLSearchParams(location.search).get("id") || DATA.listings[0]?.id;
     const l = getListingById(id);
-    document.title = `${l.type} in ${l.zone} | StudentBnB`;
+    document.title = `${l.type} in ${l.zone}, ${l.cityName || "Padova"} | StudentBnB`;
+    const detailCityLink=qs("#detail-city-link");
+    if(detailCityLink){detailCityLink.textContent=l.cityName || "Padova";detailCityLink.href=`padova.html?city=${encodeURIComponent(l.city || "padova")}`;}
     const gallery = (l.gallery && l.gallery.length ? l.gallery : [l.image]).slice(0,4);
     while(gallery.length < 4) gallery.push(gallery[gallery.length-1] || "assets/img/alloggio-1.webp");
     root.innerHTML = detailTemplate(l, gallery);
@@ -281,7 +293,7 @@
             <div><h3>Servizi nelle vicinanze</h3><ul class="bullet-list">${nearby}</ul></div>
           </div>
         </section>
-        <section class="info-card map-card"><h2>Dove si trova</h2><img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona"><strong>${escapeHtml(l.zone)}, Padova (PD)</strong><p>La posizione esatta viene condivisa dall’inserzionista prima della visita.</p></section>
+        <section class="info-card map-card"><h2>Dove si trova</h2><img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona"><strong>${escapeHtml(l.zone)}, ${escapeHtml(l.cityName || "Padova")}</strong><p>La posizione è puramente indicativa perché questo è un annuncio dimostrativo.</p></section>
       </div>
 
       <div class="detail-footer-grid">
@@ -298,13 +310,23 @@
     const expenseAmountWrap = qs("#expense-amount-wrap");
     const agency = qs("#publisher-type");
     const agencyWrap = qs("#agency-fee-wrap");
+    const citySelect=qs("#city"), zoneSelect=qs("#zone");
+    function syncZones(){
+      if(!citySelect || !zoneSelect) return;
+      const current=zoneSelect.value;
+      const zones=[...new Set(DATA.listings.filter(l=>l.city===citySelect.value).map(l=>l.zone))];
+      zoneSelect.innerHTML='<option value="">Seleziona</option>'+zones.map(z=>`<option>${escapeHtml(z)}</option>`).join('');
+      if(zones.includes(current)) zoneSelect.value=current;
+    }
     function syncConditional(){
       if(expenseAmountWrap) expenseAmountWrap.classList.toggle("hidden", expenseIncluded?.value !== "no");
       if(agencyWrap) agencyWrap.classList.toggle("hidden", agency?.value !== "Agenzia");
     }
     expenseIncluded?.addEventListener("change",syncConditional);
     agency?.addEventListener("change",syncConditional);
+    citySelect?.addEventListener("change",syncZones);
     syncConditional();
+    syncZones();
 
     qs("#preview-button")?.addEventListener("click", () => {
       if(!form.reportValidity()) return;
@@ -325,7 +347,7 @@
       localStorage.setItem("studentbnb_user_listings", JSON.stringify(saved));
       const msg = qs("#publish-success");
       msg.classList.add("active");
-      msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di Padova su questo dispositivo. <a href="padova.html" style="text-decoration:underline">Apri gli annunci</a>.`;
+      msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di ${escapeHtml(l.cityName)} su questo dispositivo. <a href="padova.html?city=${encodeURIComponent(l.city)}" style="text-decoration:underline">Apri gli annunci</a>.`;
       msg.scrollIntoView({behavior:"smooth",block:"center"});
       form.reset();
       syncConditional();
@@ -336,7 +358,7 @@
     const id = `PD-DEMO-${Date.now().toString().slice(-6)}`;
     const included = fd.get("expensesIncluded") === "yes";
     return {
-      id, zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
+      id, city:fd.get("city"), cityName:DATA.cities.find(c=>c.slug===fd.get("city"))?.name || "Padova", zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
       arrangement:fd.get("arrangement"), price:Number(fd.get("price")), expensesIncluded:included,
       expenses:included ? 0 : Number(fd.get("expenses")||0), available:fd.get("available"),
       university:fd.get("university") || "Università", universityMinutes:Number(fd.get("universityMinutes")||0),
