@@ -208,23 +208,10 @@
     const gallery = (l.gallery && l.gallery.length ? l.gallery : [l.image]).slice(0,4);
     while(gallery.length < 4) gallery.push(gallery[gallery.length-1] || "assets/img/alloggio-1.webp");
     root.innerHTML = detailTemplate(l, gallery);
-    setupDetailMap(l);
     qsa(".thumb", root).forEach(btn => btn.addEventListener("click", () => {
       qs("#main-photo", root).src = btn.dataset.src;
     }));
     setupFavorites();
-  }
-
-  function tileLayer(){
-    return L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'});
-  }
-
-  function setupDetailMap(l){
-    if(!window.L || !l.latitude || !l.longitude) return;
-    const el=qs("#listing-map"); if(!el) return;
-    const point=[Number(l.latitude),Number(l.longitude)];
-    const map=L.map(el,{scrollWheelZoom:false}).setView(point,16);
-    tileLayer().addTo(map); L.marker(point).addTo(map);
   }
 
   function detailTemplate(l, gallery){
@@ -306,7 +293,7 @@
             <div><h3>Servizi nelle vicinanze</h3><ul class="bullet-list">${nearby}</ul></div>
           </div>
         </section>
-        <section class="info-card map-card"><h2>Dove si trova</h2>${l.latitude&&l.longitude?'<div id="listing-map" class="listing-map" aria-label="Posizione dell’alloggio"></div>':'<img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona">'}<strong>${escapeHtml([l.street,l.streetNumber].filter(Boolean).join(' ') || l.zone)}, ${escapeHtml(l.cityName || "Padova")}</strong><p>${l.latitude&&l.longitude?'Posizione indicata dall’inserzionista.':'La posizione è puramente indicativa perché questo è un annuncio dimostrativo.'}</p></section>
+        <section class="info-card map-card"><h2>Zona</h2><img src="assets/img/mappa-arcella.webp" alt="Rappresentazione indicativa della zona"><strong>${escapeHtml(l.zone)}, ${escapeHtml(l.cityName || "Padova")}</strong><p>Via e numero civico vengono comunicati direttamente dall’inserzionista.</p></section>
       </div>
 
       <div class="detail-footer-grid">
@@ -323,11 +310,11 @@
     const expenseAmountWrap = qs("#expense-amount-wrap");
     const agency = qs("#publisher-type");
     const agencyWrap = qs("#agency-fee-wrap");
-    const citySelect=qs("#city"), zoneSelect=qs("#zone"), zoneOptions=qs("#zone-options");
+    const citySelect=qs("#city"), zoneSelect=qs("#zone"), photosInput=qs("#photos");
     function syncZones(){
-      if(!citySelect || !zoneSelect || !zoneOptions) return;
-      const zones=[...new Set(DATA.listings.filter(l=>l.city===citySelect.value).map(l=>l.zone))];
-      zoneOptions.innerHTML=zones.map(z=>`<option value="${escapeHtml(z)}"></option>`).join('');
+      if(!citySelect || !zoneSelect) return;
+      const zones=DATA.cities.find(c=>c.slug===citySelect.value)?.zones || [];
+      zoneSelect.innerHTML='<option value="">Seleziona quartiere/zona</option>'+zones.map(z=>`<option>${escapeHtml(z)}</option>`).join('');
     }
     function syncConditional(){
       if(expenseAmountWrap) expenseAmountWrap.classList.toggle("hidden", expenseIncluded?.value !== "no");
@@ -336,14 +323,15 @@
     expenseIncluded?.addEventListener("change",syncConditional);
     agency?.addEventListener("change",syncConditional);
     citySelect?.addEventListener("change",syncZones);
+    photosInput?.addEventListener("change",()=>previewSelectedPhotos(photosInput));
     syncConditional();
     syncZones();
-    setupAddressMap(citySelect);
 
-    qs("#preview-button")?.addEventListener("click", () => {
+    qs("#preview-button")?.addEventListener("click", async () => {
       if(!form.reportValidity()) return;
-      if(!qs("#latitude")?.value){toast("Seleziona la posizione dell’alloggio sulla mappa.");qs("#address-map")?.scrollIntoView({behavior:"smooth",block:"center"});return;}
+      const gallery=await getProcessedPhotos(photosInput);if(!gallery.length)return;
       const l = formToListing(new FormData(form));
+      l.gallery=gallery;l.image=gallery[0];
       const preview = qs("#publish-preview");
       preview.innerHTML = listingCard(l);
       preview.classList.add("active");
@@ -351,37 +339,51 @@
       preview.scrollIntoView({behavior:"smooth",block:"center"});
     });
 
-    form.addEventListener("submit", e => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
       if(!form.reportValidity()) return;
-      if(!qs("#latitude")?.value){toast("Seleziona la posizione dell’alloggio sulla mappa.");qs("#address-map")?.scrollIntoView({behavior:"smooth",block:"center"});return;}
+      const gallery=await getProcessedPhotos(photosInput);if(!gallery.length)return;
       const l = formToListing(new FormData(form));
+      l.gallery=gallery;l.image=gallery[0];
       const saved = getUserListings();
       saved.unshift(l);
-      localStorage.setItem("studentbnb_user_listings", JSON.stringify(saved));
+      try{localStorage.setItem("studentbnb_user_listings", JSON.stringify(saved));}catch{toast("Le fotografie occupano troppo spazio. Prova con meno immagini.");return;}
       const msg = qs("#publish-success");
       msg.classList.add("active");
       msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di ${escapeHtml(l.cityName)} su questo dispositivo. <a href="padova.html?city=${encodeURIComponent(l.city)}" style="text-decoration:underline">Apri gli annunci</a>.`;
       msg.scrollIntoView({behavior:"smooth",block:"center"});
       form.reset();
+      form._processedPhotos=null;qs("#photo-preview").innerHTML="";qs("#photo-status").textContent="Nessuna fotografia selezionata.";qs("#photo-status").classList.remove("selected");
       syncConditional();
+      syncZones();
     });
   }
 
-  function setupAddressMap(citySelect){
-    const el=qs("#address-map"); if(!el) return;
-    const centers={milano:[45.4642,9.19],torino:[45.0703,7.6869],trento:[46.0748,11.1217],padova:[45.4064,11.8768],trieste:[45.6495,13.7768],bologna:[44.4949,11.3426],pisa:[43.7228,10.4017],firenze:[43.7696,11.2558],ancona:[43.6158,13.5189],roma:[41.9028,12.4964],bari:[41.1171,16.8719],napoli:[40.8518,14.2681],cagliari:[39.2238,9.1217],palermo:[38.1157,13.3615]};
-    if(!window.L){el.innerHTML='<div class="notice">La mappa non è disponibile. Verifica la connessione internet.</div>';return;}
-    const map=L.map(el).setView(centers[citySelect?.value]||centers.padova,12);tileLayer().addTo(map);let marker;
-    citySelect?.addEventListener("change",()=>map.setView(centers[citySelect.value]||centers.padova,12));
-    map.on("click",e=>{const {lat,lng}=e.latlng;qs("#latitude").value=lat.toFixed(6);qs("#longitude").value=lng.toFixed(6);if(marker)marker.setLatLng(e.latlng);else marker=L.marker(e.latlng).addTo(map);const status=qs("#map-selection-status");status.textContent='Posizione selezionata correttamente.';status.classList.add('selected');});
+  function previewSelectedPhotos(input){
+    const files=[...(input?.files||[])];input.form._processedPhotos=null;
+    if(files.length>8){input.value="";toast("Puoi caricare al massimo 8 fotografie.");return previewSelectedPhotos(input);}
+    const root=qs("#photo-preview"),status=qs("#photo-status");root.innerHTML="";
+    files.forEach(file=>{const image=document.createElement("img");image.src=URL.createObjectURL(file);image.alt="Anteprima fotografia";image.onload=()=>URL.revokeObjectURL(image.src);root.appendChild(image)});
+    status.textContent=files.length?`${files.length} ${files.length===1?'fotografia selezionata':'fotografie selezionate'}. La prima sarà la copertina.`:"Nessuna fotografia selezionata.";status.classList.toggle("selected",files.length>0);
+  }
+
+  async function getProcessedPhotos(input){
+    const files=[...(input?.files||[])].slice(0,8);if(!files.length){toast("Carica almeno una fotografia.");return []}
+    if(input.form._processedPhotos)return input.form._processedPhotos;
+    toast("Preparazione fotografie in corso…");
+    try{input.form._processedPhotos=await Promise.all(files.map(compressPhoto));return input.form._processedPhotos;}
+    catch{toast("Una delle fotografie non può essere letta. Prova a sostituirla.");return []}
+  }
+
+  function compressPhoto(file){
+    return new Promise((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=1200,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.round(image.width*scale);canvas.height=Math.round(image.height*scale);canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);resolve(canvas.toDataURL("image/webp",.72))};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Immagine non valida"))};image.src=url});
   }
 
   function formToListing(fd){
     const id = `PD-DEMO-${Date.now().toString().slice(-6)}`;
     const included = fd.get("expensesIncluded") === "yes";
     return {
-      id, city:fd.get("city"), cityName:DATA.cities.find(c=>c.slug===fd.get("city"))?.name || "Padova", zone:fd.get("zone"), street:fd.get("street"), streetNumber:fd.get("streetNumber"), latitude:Number(fd.get("latitude")), longitude:Number(fd.get("longitude")), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
+      id, city:fd.get("city"), cityName:DATA.cities.find(c=>c.slug===fd.get("city"))?.name || "Padova", zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
       arrangement:fd.get("arrangement"), price:Number(fd.get("price")), expensesIncluded:included,
       expenses:included ? 0 : Number(fd.get("expenses")||0), available:fd.get("available"),
       university:fd.get("university") || "Università", universityMinutes:Number(fd.get("universityMinutes")||0),

@@ -1,17 +1,24 @@
 (() => {
   const cities = [
-    ['milano','Milano',['Città Studi','Bicocca','Bocconi']], ['torino','Torino',['Vanchiglia','San Salvario','Cenisia']],
-    ['trento','Trento',['Centro','San Bartolomeo','Povo']], ['padova','Padova',['Arcella','Portello','Sacra Famiglia']],
-    ['trieste','Trieste',['Centro','San Giacomo','Roiano']], ['bologna','Bologna',['Bolognina','San Donato','Saragozza']],
-    ['pisa','Pisa',['Centro','Porta a Lucca','San Martino']], ['firenze','Firenze',['Novoli','Rifredi','Campo di Marte']],
-    ['ancona','Ancona',['Centro','Piano','Torrette']], ['roma','Roma',['San Lorenzo','Bologna','Ostiense']],
-    ['bari','Bari',['Murat','Carrassi','Poggiofranco']], ['napoli','Napoli',['Centro Storico','Fuorigrotta','Vomero']],
-    ['cagliari','Cagliari',['Castello','San Benedetto','Is Mirrionis']], ['palermo','Palermo',['Centro Storico','Politeama','Montegrappa']]
+    ['milano','Milano',['Affori','Baggio','Bande Nere','Barona','Bicocca','Bocconi','Bovisa','Brera','Bruzzano','Buenos Aires – Venezia','Centrale','Cermenate – Missaglia','Chiaravalle','Città Studi','Comasina','Corvetto','Dergano','De Angeli – Frua','Duomo – Centro Storico','Forlanini','Gallaratese','Garibaldi – Moscova','Giambellino','Gratosoglio','Greco','Isola','Lambrate','Lodi – Brenta','Lorenteggio','Maciachini – Maggiolina','Monza – Padova','Navigli','Niguarda','NoLo – Loreto','Ortica','Pagano – Washington','Porta Genova','Porta Romana','Porta Venezia','Portello','Precotto','Quarto Oggiaro','Ripamonti','Rogoredo','San Siro','Sarpi','Solari','Ticinese','Trenno','Vigentino','Villapizzone','Altro quartiere/zona']],
+    ['torino','Torino',['Aurora','Barca – Bertolla','Barriera di Milano','Borgata Lesna','Borgo Po','Borgo San Paolo','Campidoglio','Cenisia','Centro','Cit Turin','Crocetta','Falchera','Filadelfia','Lingotto','Lucento','Madonna del Pilone','Madonna di Campagna','Mirafiori Nord','Mirafiori Sud','Nizza Millefonti','Parella','Pozzo Strada','Precollina','Rebaudengo','Regio Parco','San Donato','San Paolo','San Salvario','Santa Rita','Sassi','Vallette','Vanchiglia','Vanchiglietta','Altro quartiere/zona']],
+    ['trento','Trento',['Centro Storico','Bolghera','Campotrentino','Canova','Clarina','Cognola','Gardolo','Laste','Madonna Bianca','Martignano','Mattarello','Meano','Melta','Oltrefersina','Piedicastello','Povo','Ravina','Romagnano','San Bartolomeo','San Donà','San Giuseppe','Solteri','Sopramonte','Villazzano','Vela','Altro quartiere/zona']],
+    ['padova','Padova',['Altichiero','Arcella','Bassanello','Brusegana','Camin','Centro Storico','Chiesanuova','Città Giardino','Crocefisso','Forcellini','Guizza','Mandria','Madonna Pellegrina','Mortise','Paltana','Ponte di Brenta','Portello','Prato della Valle','Sacra Famiglia','San Bellino','San Carlo','San Lazzaro','San Giuseppe','Sant’Ignazio','Savonarola','Stanga','Terranegra','Voltabarozzo','Altro quartiere/zona']],
+    ['trieste','Trieste',['Altura','Barcola','Basovizza','Borgo San Sergio','Campi Elisi','Cattinara','Chiadino','Chiarbola','Colle di San Giusto','Gretta','Guardiella','Miramare','Opicina','Roiano','San Giacomo','San Giovanni','San Vito','Scorcola','Servola','Valmaura','Centro – Borgo Teresiano','Città Vecchia','Altro quartiere/zona']],
+    ['bologna','Bologna',['Barca','Bolognina','Borgo Panigale','Centro Storico','Cirenaica','Colli','Corticella','Costa – Saragozza','Fiera','Fossolo','Irnerio','Lame','Mazzini','Murri','Navile','Pilastro','Porto','Reno','San Donato','San Ruffillo','San Vitale','Santa Viola','Santo Stefano','Saragozza','Savena','Altro quartiere/zona']],
+    ['pisa','Pisa',['Barbaricina','Cisanello','Coltano','Don Bosco – Pratale','Gagno','La Cella','Marina di Pisa','Oratoio','Ospedaletto','Porta a Lucca','Porta Fiorentina','Porta Nuova','Putignano','Quartiere San Francesco','Quartiere Sant’Antonio','Quartiere Santa Maria','Quartiere San Martino','Riglione','San Giusto – San Marco','San Piero a Grado','Sant’Ermete','Tirrenia','Altro quartiere/zona']],
+    ['firenze','Firenze',['Campo di Marte','Careggi','Castello','Coverciano','Gavinana','Isolotto','Le Cure','Legnaia','Mantignano','Novoli','Oltrarno – Santo Spirito','Peretola','Ponte a Ema','Porta al Prato','Rifredi','Rovezzano','San Frediano','San Iacopino','San Lorenzo','San Niccolò','Santa Croce','Santa Maria Novella','Soffiano','Statuto','Centro Storico – Duomo','Altro quartiere/zona']],
+    ['ancona','Ancona',['Adriatico','Archi','Brecce Bianche','Candia','Centro Storico','Collemarino','Grazie','Montedago','Palombare','Passetto','Piano San Lazzaro','Pietralacroce','Pinocchio','Posatora','Q2 – Nuovi Archi','Q3 – Monte Dago','Rione Capodimonte','Torrette','Vallemiano','Varano','Altro quartiere/zona']],
+    ['roma','Roma',['Acilia','Appio Claudio','Appio Latino','Aurelio','Balduina','Boccea','Centocelle','Centro Storico','Cinecittà','Colli Albani','Conca d’Oro','EUR','Esquilino','Flaminio','Garbatella','Gianicolense – Monteverde','Infernetto','Laurentina','Marconi','Montesacro','Nomentano – Piazza Bologna','Ostiense','Parioli','Pigneto','Ponte Milvio','Prati','Re di Roma','San Giovanni','San Lorenzo','San Paolo','Talenti','Testaccio','Tiburtina','Tor Bella Monaca','Tor Pignattara','Trastevere','Trieste – Salario','Tuscolano','Valle Aurelia','Altro quartiere/zona']],
+    ['bari','Bari',['Borgo Antico','Carrassi','Carbonara','Ceglie del Campo','Fesca','Japigia','Libertà','Loseto','Madonnella','Marconi – San Girolamo','Mungivacca','Murat','Palese','Picone','Poggiofranco','San Nicola','San Paolo','Santo Spirito','Stanic','Torre a Mare','Altro quartiere/zona']],
+    ['napoli','Napoli',['Arenella','Avvocata','Bagnoli','Barra','Chiaia','Chiaiano','Colli Aminei','Corso Vittorio Emanuele','Fuorigrotta','Mergellina','Mercato','Montecalvario','Museo','Piscinola','Poggioreale','Ponticelli','Posillipo','Rione Alto','San Carlo all’Arena','San Ferdinando','San Giovanni a Teduccio','Sanità','Scampia','Secondigliano','Soccavo','Stella','Vomero','Zona Ospedaliera','Centro Storico – Decumani','Altro quartiere/zona']],
+    ['cagliari','Cagliari',['Barracca Manna','Bonaria','Castello','Cep','Genneruxi','Is Mirrionis','La Palma','Marina','Monreale','Monte Urpinu','Mulinu Becciu','Poetto','Pirri','San Benedetto','San Michele','Sant’Avendrace','Sant’Elia','Stampace','Tuvixeddu – Tuvumannu','Villanova','Altro quartiere/zona']],
+    ['palermo','Palermo',['Albergheria','Altarello','Arenella – Vergine Maria','Borgo Nuovo','Borgo Vecchio','Brancaccio','Calatafimi','Capo','Cruillas','Falsomiele','Kalsa','Libertà','Malaspina – Palagonia','Mezzomonreale','Montegrappa – Santa Rosalia','Mondello','Noce','Oreto – Perez','Pallavicino','Partanna Mondello','Politeama','Resuttana','Sferracavallo','Tommaso Natale','Uditore','Villagrazia','Vucciria','Zisa','Altro quartiere/zona']]
   ];
   const types=['Stanza singola','Posto letto in doppia','Bilocale'];
   const photos=['alloggio-1.webp','alloggio-2.webp','alloggio-3.webp'];
   const listings=[];
-  cities.forEach(([slug,name,zones],ci)=>zones.forEach((zone,i)=>{
+  cities.forEach(([slug,name,zones],ci)=>zones.slice(0,3).forEach((zone,i)=>{
     const price=[420,310,690][i]+(ci%5)*20;
     listings.push({
       id:`${slug.slice(0,3).toUpperCase()}-${i+1}-DEMO`,city:slug,cityName:name,zone,
@@ -28,5 +35,5 @@
       published:'annuncio dimostrativo',updated:'oggi',isDemo:true
     });
   }));
-  window.STUDENTBNB_DATA={cities:cities.map(([slug,name])=>({slug,name,count:3,live:true})),listings};
+  window.STUDENTBNB_DATA={cities:cities.map(([slug,name,zones])=>({slug,name,zones,count:3,live:true})),listings};
 })();
