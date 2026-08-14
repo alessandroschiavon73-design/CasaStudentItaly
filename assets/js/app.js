@@ -158,6 +158,14 @@
     const cityListings = allListings().filter(l => (l.city || "padova") === city.slug);
     document.title = `Alloggi per studenti a ${city.name} | StudentBnB`;
     const cityTitle=qs("#city-name"), cityCount=qs("#city-count"), cityDescription=qs("#city-description"), cityCrumb=qs("#city-breadcrumb");
+    const cityHero=qs(".city-hero-bg");
+    const cityHeroImages={
+      milano:"citta-milano.webp",torino:"citta-torino.webp",trento:"citta-trento-hero.webp",padova:"padova-hero.webp",
+      trieste:"citta-trieste-hero.webp",bologna:"citta-bologna.webp",pisa:"citta-pisa.webp",firenze:"citta-firenze.webp",
+      ancona:"citta-ancona-hero.webp",roma:"citta-roma.webp",bari:"citta-bari-hero.webp",napoli:"citta-napoli.webp",
+      cagliari:"citta-cagliari-hero.webp",palermo:"citta-palermo-hero.webp"
+    };
+    if(cityHero) cityHero.style.backgroundImage=`url("assets/img/${cityHeroImages[city.slug] || "padova-hero.webp"}")`;
     if(cityTitle) cityTitle.textContent=city.name;
     if(cityCount) cityCount.textContent=`${cityListings.length} annunci dimostrativi disponibili`;
     if(cityDescription) cityDescription.textContent=`Scopri gli alloggi dimostrativi nelle zone universitarie di ${city.name}. Ogni offerta evidenzia costi, spese e condizioni contrattuali.`;
