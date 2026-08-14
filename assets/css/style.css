@@ -224,6 +224,13 @@ button{cursor:pointer}
 .preview-box.active{display:block}
 .success-message{display:none;background:var(--green-soft);border:1px solid #a8dfbd;border-radius:14px;padding:22px;margin-top:18px}
 .success-message.active{display:block}
+.address-map-wrap{margin-top:18px}
+.address-map-wrap>p{margin:6px 0 12px;color:var(--muted);font-size:14px}
+.address-map{height:390px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#eef1f3}
+.map-selection-status{margin-top:8px;font-size:13px;color:var(--muted)}
+.map-selection-status.selected{color:var(--green);font-weight:750}
+.listing-map{height:300px;border-radius:10px;margin-bottom:12px;background:#eef1f3}
+.map-attribution-note{font-size:11px;color:var(--muted)}
 
 /* Modal and toast */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}

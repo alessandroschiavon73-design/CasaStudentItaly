@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffc400">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynhZUdbe1Pba9kBBuS7kP9E+e2I=" crossorigin="">
 
 <title>Pubblica un annuncio | StudentBnB</title>
 <meta name="description" content="Pubblica un'offerta abitativa per studenti indicando in modo chiaro canone, spese, durata, deposito e servizi.">
@@ -49,7 +50,9 @@
         <p>Indica subito che cosa viene affittato e dove si trova.</p>
         <div class="form-grid three">
           <div class="field"><label for="city">Città *</label><select id="city" name="city" required><option value="">Seleziona</option><option value="milano">Milano</option><option value="torino">Torino</option><option value="trento">Trento</option><option value="padova">Padova</option><option value="trieste">Trieste</option><option value="bologna">Bologna</option><option value="pisa">Pisa</option><option value="firenze">Firenze</option><option value="ancona">Ancona</option><option value="roma">Roma</option><option value="bari">Bari</option><option value="napoli">Napoli</option><option value="cagliari">Cagliari</option><option value="palermo">Palermo</option></select></div>
-          <div class="field"><label for="zone">Zona *</label><select id="zone" name="zone" required><option value="">Seleziona</option><option>Arcella</option><option>Portello</option><option>Sacra Famiglia</option><option>Ponte San Nicolò</option><option>Madonna Pellegrina</option><option>Centro</option><option>Forcellini</option><option>Guizza</option></select></div>
+          <div class="field"><label for="zone">Quartiere *</label><input id="zone" name="zone" list="zone-options" required placeholder="Es. Arcella"><datalist id="zone-options"></datalist></div>
+          <div class="field"><label for="street">Via/Piazza *</label><input id="street" name="street" required placeholder="Es. Via Tiziano Aspetti"></div>
+          <div class="field"><label for="streetNumber">Numero civico</label><input id="streetNumber" name="streetNumber" placeholder="Es. 24"></div>
           <div class="field"><label for="type">Tipologia *</label><select id="type" name="type" required><option value="">Seleziona</option><option>Stanza singola</option><option>Posto letto in doppia</option><option>Bilocale</option><option>Monolocale</option><option>Appartamento (3 camere)</option></select></div>
           <div class="field"><label for="arrangement">Formula *</label><select id="arrangement" name="arrangement" required><option>In appartamento condiviso</option><option>Appartamento intero</option><option>Residence per studenti</option><option>Formula all inclusive</option></select></div>
           <div class="field"><label for="surface">Superficie stanza (m²)</label><input id="surface" name="surface" type="number" min="5" max="100"></div>
@@ -61,6 +64,13 @@
           <div class="field"><label for="centerMinutes">Distanza centro (min)</label><input id="centerMinutes" name="centerMinutes" type="number" min="0" max="120"></div>
           <div class="field"><label for="tag">Caratteristica sintetica</label><input id="tag" name="tag" placeholder="Es. vicina alla stazione"></div>
           <div class="field"><label for="available">Disponibile da *</label><input id="available" name="available" required placeholder="Es. 1 settembre"></div>
+        </div>
+        <div class="address-map-wrap">
+          <span class="field-label">Posizione sulla mappa *</span>
+          <p>Clicca sulla mappa per collocare il segnaposto. Puoi indicare un punto leggermente approssimativo per tutelare la privacy.</p>
+          <div id="address-map" class="address-map" aria-label="Seleziona la posizione dell’alloggio"></div>
+          <input id="latitude" name="latitude" type="hidden" required><input id="longitude" name="longitude" type="hidden" required>
+          <div id="map-selection-status" class="map-selection-status">Nessuna posizione selezionata.</div>
         </div>
       </section>
 
@@ -154,6 +164,7 @@
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="assets/js/data.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="assets/js/app.js"></script>
 </body>
 </html>

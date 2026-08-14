@@ -9,6 +9,8 @@ Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - pagina città dinamica con filtri e annunci pertinenti;
 - scheda annuncio completa e orientata alla trasparenza commerciale;
 - modulo di pubblicazione con scelta della città, costi, spese, deposito, durata e preavviso;
+- inserimento di quartiere, via/piazza, civico e posizionamento manuale del punto sulla mappa;
+- visualizzazione cartografica del punto nella scheda dei nuovi annunci;
 - preferiti, ricerca, filtri, galleria e annunci demo funzionanti;
 - layout responsive per computer, tablet e smartphone.
 

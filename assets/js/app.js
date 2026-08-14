@@ -208,10 +208,23 @@
     const gallery = (l.gallery && l.gallery.length ? l.gallery : [l.image]).slice(0,4);
     while(gallery.length < 4) gallery.push(gallery[gallery.length-1] || "assets/img/alloggio-1.webp");
     root.innerHTML = detailTemplate(l, gallery);
+    setupDetailMap(l);
     qsa(".thumb", root).forEach(btn => btn.addEventListener("click", () => {
       qs("#main-photo", root).src = btn.dataset.src;
     }));
     setupFavorites();
+  }
+
+  function tileLayer(){
+    return L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'});
+  }
+
+  function setupDetailMap(l){
+    if(!window.L || !l.latitude || !l.longitude) return;
+    const el=qs("#listing-map"); if(!el) return;
+    const point=[Number(l.latitude),Number(l.longitude)];
+    const map=L.map(el,{scrollWheelZoom:false}).setView(point,16);
+    tileLayer().addTo(map); L.marker(point).addTo(map);
   }
 
   function detailTemplate(l, gallery){
@@ -293,7 +306,7 @@
             <div><h3>Servizi nelle vicinanze</h3><ul class="bullet-list">${nearby}</ul></div>
           </div>
         </section>
-        <section class="info-card map-card"><h2>Dove si trova</h2><img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona"><strong>${escapeHtml(l.zone)}, ${escapeHtml(l.cityName || "Padova")}</strong><p>La posizione è puramente indicativa perché questo è un annuncio dimostrativo.</p></section>
+        <section class="info-card map-card"><h2>Dove si trova</h2>${l.latitude&&l.longitude?'<div id="listing-map" class="listing-map" aria-label="Posizione dell’alloggio"></div>':'<img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona">'}<strong>${escapeHtml([l.street,l.streetNumber].filter(Boolean).join(' ') || l.zone)}, ${escapeHtml(l.cityName || "Padova")}</strong><p>${l.latitude&&l.longitude?'Posizione indicata dall’inserzionista.':'La posizione è puramente indicativa perché questo è un annuncio dimostrativo.'}</p></section>
       </div>
 
       <div class="detail-footer-grid">
@@ -310,13 +323,11 @@
     const expenseAmountWrap = qs("#expense-amount-wrap");
     const agency = qs("#publisher-type");
     const agencyWrap = qs("#agency-fee-wrap");
-    const citySelect=qs("#city"), zoneSelect=qs("#zone");
+    const citySelect=qs("#city"), zoneSelect=qs("#zone"), zoneOptions=qs("#zone-options");
     function syncZones(){
-      if(!citySelect || !zoneSelect) return;
-      const current=zoneSelect.value;
+      if(!citySelect || !zoneSelect || !zoneOptions) return;
       const zones=[...new Set(DATA.listings.filter(l=>l.city===citySelect.value).map(l=>l.zone))];
-      zoneSelect.innerHTML='<option value="">Seleziona</option>'+zones.map(z=>`<option>${escapeHtml(z)}</option>`).join('');
-      if(zones.includes(current)) zoneSelect.value=current;
+      zoneOptions.innerHTML=zones.map(z=>`<option value="${escapeHtml(z)}"></option>`).join('');
     }
     function syncConditional(){
       if(expenseAmountWrap) expenseAmountWrap.classList.toggle("hidden", expenseIncluded?.value !== "no");
@@ -327,9 +338,11 @@
     citySelect?.addEventListener("change",syncZones);
     syncConditional();
     syncZones();
+    setupAddressMap(citySelect);
 
     qs("#preview-button")?.addEventListener("click", () => {
       if(!form.reportValidity()) return;
+      if(!qs("#latitude")?.value){toast("Seleziona la posizione dell’alloggio sulla mappa.");qs("#address-map")?.scrollIntoView({behavior:"smooth",block:"center"});return;}
       const l = formToListing(new FormData(form));
       const preview = qs("#publish-preview");
       preview.innerHTML = listingCard(l);
@@ -341,6 +354,7 @@
     form.addEventListener("submit", e => {
       e.preventDefault();
       if(!form.reportValidity()) return;
+      if(!qs("#latitude")?.value){toast("Seleziona la posizione dell’alloggio sulla mappa.");qs("#address-map")?.scrollIntoView({behavior:"smooth",block:"center"});return;}
       const l = formToListing(new FormData(form));
       const saved = getUserListings();
       saved.unshift(l);
@@ -354,11 +368,20 @@
     });
   }
 
+  function setupAddressMap(citySelect){
+    const el=qs("#address-map"); if(!el) return;
+    const centers={milano:[45.4642,9.19],torino:[45.0703,7.6869],trento:[46.0748,11.1217],padova:[45.4064,11.8768],trieste:[45.6495,13.7768],bologna:[44.4949,11.3426],pisa:[43.7228,10.4017],firenze:[43.7696,11.2558],ancona:[43.6158,13.5189],roma:[41.9028,12.4964],bari:[41.1171,16.8719],napoli:[40.8518,14.2681],cagliari:[39.2238,9.1217],palermo:[38.1157,13.3615]};
+    if(!window.L){el.innerHTML='<div class="notice">La mappa non è disponibile. Verifica la connessione internet.</div>';return;}
+    const map=L.map(el).setView(centers[citySelect?.value]||centers.padova,12);tileLayer().addTo(map);let marker;
+    citySelect?.addEventListener("change",()=>map.setView(centers[citySelect.value]||centers.padova,12));
+    map.on("click",e=>{const {lat,lng}=e.latlng;qs("#latitude").value=lat.toFixed(6);qs("#longitude").value=lng.toFixed(6);if(marker)marker.setLatLng(e.latlng);else marker=L.marker(e.latlng).addTo(map);const status=qs("#map-selection-status");status.textContent='Posizione selezionata correttamente.';status.classList.add('selected');});
+  }
+
   function formToListing(fd){
     const id = `PD-DEMO-${Date.now().toString().slice(-6)}`;
     const included = fd.get("expensesIncluded") === "yes";
     return {
-      id, city:fd.get("city"), cityName:DATA.cities.find(c=>c.slug===fd.get("city"))?.name || "Padova", zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
+      id, city:fd.get("city"), cityName:DATA.cities.find(c=>c.slug===fd.get("city"))?.name || "Padova", zone:fd.get("zone"), street:fd.get("street"), streetNumber:fd.get("streetNumber"), latitude:Number(fd.get("latitude")), longitude:Number(fd.get("longitude")), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
       arrangement:fd.get("arrangement"), price:Number(fd.get("price")), expensesIncluded:included,
       expenses:included ? 0 : Number(fd.get("expenses")||0), available:fd.get("available"),
       university:fd.get("university") || "Università", universityMinutes:Number(fd.get("universityMinutes")||0),
