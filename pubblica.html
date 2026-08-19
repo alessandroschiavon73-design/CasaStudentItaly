@@ -24,6 +24,7 @@
       <a href="index.html#chi-siamo">Chi siamo</a>
       <a href="index.html#faq">FAQ</a>
       <a href="index.html#contatti">Contatti</a>
+      <a class="nav-feature-link" href="cerco.html">Cerco alloggio</a>
       <a class="header-cta" href="pubblica.html">Pubblica annuncio gratis</a>
       <a class="account-link" href="#" data-login>♙ <span data-account-label>Accedi</span></a>
     </nav>
@@ -36,11 +37,12 @@
       <h1>Pubblica il tuo annuncio</h1>
       <p>Compila i campi che permettono allo studente di capire e confrontare realmente l’offerta commerciale.</p>
     </div>
-    <div class="progress" aria-label="Fasi del modulo">
+    <div class="progress five" aria-label="Fasi del modulo">
       <div class="progress-step active" data-step="1"><span>Alloggio</span></div>
       <div class="progress-step active" data-step="2"><span>Costi</span></div>
       <div class="progress-step active" data-step="3"><span>Condizioni</span></div>
-      <div class="progress-step active" data-step="4"><span>Contatti</span></div>
+      <div class="progress-step active" data-step="4"><span>Convivenza</span></div>
+      <div class="progress-step active" data-step="5"><span>Contatti</span></div>
     </div>
 
     <form id="publish-form" class="publish-form">
@@ -114,7 +116,31 @@
       </section>
 
       <section class="form-section card">
-        <h2>4. Contatti</h2>
+        <h2>4. Profilo della convivenza</h2>
+        <p>Aiuta lo studente a capire non soltanto com’è la casa, ma anche con chi vivrà e quale atmosfera troverà.</p>
+        <div class="form-grid three">
+          <div class="field"><label for="householdComposition">Chi vive già in casa?</label><input id="householdComposition" name="householdComposition" placeholder="Es. 2 studenti e 1 lavoratore"></div>
+          <div class="field"><label for="householdAge">Età indicativa</label><input id="householdAge" name="householdAge" placeholder="Es. 21–26 anni"></div>
+          <div class="field"><label for="householdLanguages">Lingue parlate</label><input id="householdLanguages" name="householdLanguages" placeholder="Es. italiano, inglese, spagnolo"></div>
+          <div class="field"><label for="householdAtmosphere">Atmosfera della casa</label><select id="householdAtmosphere" name="householdAtmosphere"><option>Equilibrata e socievole</option><option>Tranquilla e studiosa</option><option>Sociale e internazionale</option><option>Solo condivisione delle spese</option><option>Da creare – appartamento libero</option></select></div>
+          <div class="field"><label for="householdCleanliness">Organizzazione pulizie</label><select id="householdCleanliness" name="householdCleanliness"><option>Turni settimanali</option><option>Calendario condiviso</option><option>Pulizie autonome</option><option>Servizio di pulizia</option><option>Da concordare</option></select></div>
+          <div class="field"><label for="householdGuests">Ospiti</label><select id="householdGuests" name="householdGuests"><option>Occasionali e con preavviso</option><option>Ammessi liberamente</option><option>Limitati</option><option>Non ammessi</option><option>Da concordare</option></select></div>
+          <div class="field"><label for="householdCooking">Cucina e pasti</label><select id="householdCooking" name="householdCooking"><option>Prevalentemente autonomi</option><option>Si cucina spesso insieme</option><option>Cene comuni nel weekend</option><option>Cucina poco utilizzata</option><option>Da concordare</option></select></div>
+          <div class="field full"><label for="householdDescription">Presenta i coinquilini e la vita in casa</label><textarea id="householdDescription" name="householdDescription" rows="5" placeholder="Es. In casa vivono due studenti di Ingegneria. L’ambiente è tranquillo durante la settimana, ma ogni tanto si cena insieme. Cerchiamo una persona ordinata e rispettosa."></textarea><span class="profile-help">Evita criteri discriminatori: descrivi abitudini e convivenza, non categorie personali protette.</span></div>
+        </div>
+        <span class="field-label">Interessi presenti in casa</span>
+        <div class="checkbox-grid" style="margin-top:9px">
+          <label class="check-option"><input type="checkbox" name="householdInterests" value="Studio"> Studio</label>
+          <label class="check-option"><input type="checkbox" name="householdInterests" value="Sport"> Sport</label>
+          <label class="check-option"><input type="checkbox" name="householdInterests" value="Cinema"> Cinema</label>
+          <label class="check-option"><input type="checkbox" name="householdInterests" value="Cene in casa"> Cene in casa</label>
+          <label class="check-option"><input type="checkbox" name="householdInterests" value="Musica"> Musica</label>
+          <label class="check-option"><input type="checkbox" name="householdInterests" value="Viaggi ed Erasmus"> Viaggi ed Erasmus</label>
+        </div>
+      </section>
+
+      <section class="form-section card">
+        <h2>5. Contatti</h2>
         <p>I contatti sono mostrati direttamente allo studente. Nella demo non vengono inviati a un server.</p>
         <div class="form-grid">
           <div class="field"><label for="email">Email *</label><input id="email" name="email" type="email" required></div>
@@ -140,7 +166,7 @@
         <a class="brand" href="index.html" style="font-size:27px"><span>Student<strong>BnB</strong></span></a>
         <p>La piattaforma dedicata alla mobilità abitativa degli studenti: costi, condizioni e servizi confrontabili con chiarezza.</p>
       </div>
-      <div><h3>Esplora</h3><div class="footer-links"><a href="padova.html">Alloggi a Padova</a><a href="index.html#citta">Città universitarie</a><a href="pubblica.html">Pubblica annuncio</a></div></div>
+      <div><h3>Esplora</h3><div class="footer-links"><a href="padova.html">Alloggi a Padova</a><a href="studenti.html">Studenti in cerca</a><a href="cerco.html">Cerco alloggio</a><a href="pubblica.html">Pubblica annuncio</a></div></div>
       <div><h3>Progetto</h3><div class="footer-links"><a href="index.html#come-funziona">Come funziona</a><a href="index.html#chi-siamo">Chi siamo</a><a href="index.html#faq">Domande frequenti</a></div></div>
       <div><h3>Sicurezza</h3><div class="footer-links"><a href="privacy.html">Privacy e condizioni</a><a href="privacy.html#sicurezza">Prevenzione truffe</a><a href="mailto:segnalazioni@studentbnb.it">Segnala un annuncio</a></div></div>
     </div>

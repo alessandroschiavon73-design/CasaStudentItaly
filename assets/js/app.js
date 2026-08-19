@@ -2,6 +2,7 @@
 (() => {
   "use strict";
   const DATA = window.STUDENTBNB_DATA || {listings:[], cities:[]};
+  const DEMO_REQUESTS = window.STUDENTBNB_REQUESTS || [];
 
   const qs = (s, root=document) => root.querySelector(s);
   const qsa = (s, root=document) => [...root.querySelectorAll(s)];
@@ -12,6 +13,11 @@
     catch { return []; }
   }
   function allListings(){ return [...getUserListings(), ...DATA.listings]; }
+  function getUserRequests(){
+    try { return JSON.parse(localStorage.getItem("studentbnb_student_requests") || "[]"); }
+    catch { return []; }
+  }
+  function allStudentRequests(){ return [...getUserRequests(), ...DEMO_REQUESTS]; }
   function favorites(){
     try { return new Set(JSON.parse(localStorage.getItem("studentbnb_favorites") || "[]")); }
     catch { return new Set(); }
@@ -101,7 +107,11 @@
         const fd = new FormData(form);
         const city = fd.get("city");
         const type = fd.get("type");
-        location.href = `padova.html?city=${encodeURIComponent(city || "padova")}&type=${encodeURIComponent(type || "")}`;
+        if(city !== "padova"){
+          toast("La demo operativa parte da Padova; le altre città saranno attivate progressivamente.");
+          return;
+        }
+        location.href = `padova.html?type=${encodeURIComponent(type || "")}`;
       });
     }
     qsa("[data-city-coming]").forEach(el => el.addEventListener("click", e => {
@@ -129,6 +139,7 @@
             <span>Disponibile ${escapeHtml(l.available || "da concordare")}</span>
             <span>🚲 ${escapeHtml(l.university || "Università")}: ${escapeHtml(String(l.universityMinutes || "—"))} min</span>
             <span>🚌 Centro: ${escapeHtml(String(l.centerMinutes || "—"))} min</span>
+            ${l.household?.atmosphere ? `<span>👥 ${escapeHtml(l.household.atmosphere)}</span>` : ""}
           </div>
         </div>
         <div class="listing-price">
@@ -153,27 +164,6 @@
       sort: qs("#filter-sort")
     };
     const params = new URLSearchParams(location.search);
-    const citySlug = params.get("city") || "padova";
-    const city = DATA.cities.find(c => c.slug === citySlug) || DATA.cities.find(c => c.slug === "padova");
-    const cityListings = allListings().filter(l => (l.city || "padova") === city.slug);
-    document.title = `Alloggi per studenti a ${city.name} | StudentBnB`;
-    const cityTitle=qs("#city-name"), cityCount=qs("#city-count"), cityDescription=qs("#city-description"), cityCrumb=qs("#city-breadcrumb");
-    const cityHero=qs(".city-hero-bg");
-    const cityHeroImages={
-      milano:"citta-milano.webp",torino:"citta-torino.webp",trento:"citta-trento-hero.webp",padova:"padova-hero.webp",
-      trieste:"citta-trieste-hero.webp",bologna:"citta-bologna.webp",pisa:"citta-pisa.webp",firenze:"citta-firenze.webp",
-      ancona:"citta-ancona-hero.webp",roma:"citta-roma.webp",bari:"citta-bari-hero.webp",napoli:"citta-napoli.webp",
-      cagliari:"citta-cagliari-hero.webp",palermo:"citta-palermo-hero.webp"
-    };
-    if(cityHero) cityHero.style.backgroundImage=`url("assets/img/${cityHeroImages[city.slug] || "padova-hero.webp"}")`;
-    if(cityTitle) cityTitle.textContent=city.name;
-    if(cityCount) cityCount.textContent=`${cityListings.length} annunci dimostrativi disponibili`;
-    if(cityDescription) cityDescription.textContent=`Scopri gli alloggi dimostrativi nelle zone universitarie di ${city.name}. Ogni offerta evidenzia costi, spese e condizioni contrattuali.`;
-    if(cityCrumb) cityCrumb.textContent=city.name;
-    if(controls.zone){
-      const zones=[...new Set(cityListings.map(l=>l.zone))];
-      controls.zone.innerHTML='<option value="">Tutte le zone</option>'+zones.map(z=>`<option>${escapeHtml(z)}</option>`).join('');
-    }
     if(params.get("type") && controls.type){
       const requested = params.get("type");
       const option = [...controls.type.options].find(o => o.value.toLowerCase().includes(requested.toLowerCase()) || requested.toLowerCase().includes(o.value.toLowerCase()));
@@ -181,7 +171,6 @@
     }
     function render(){
       let items = allListings().filter(l => {
-        if((l.city || "padova") !== city.slug) return false;
         if(controls.zone?.value && l.zone !== controls.zone.value) return false;
         if(controls.type?.value && l.type !== controls.type.value) return false;
         if(controls.price?.value && Number(l.price) > Number(controls.price.value)) return false;
@@ -194,7 +183,7 @@
       if(sort === "price-desc") items.sort((a,b) => b.price-a.price);
       if(sort === "zone") items.sort((a,b) => a.zone.localeCompare(b.zone,"it"));
       list.innerHTML = items.length ? items.map(listingCard).join("") : `<div class="empty-state"><h3>Nessun annuncio con questi filtri</h3><p>Prova ad ampliare la zona, il prezzo o la tipologia.</p></div>`;
-      qs("#result-count").textContent = `${items.length} ${items.length === 1 ? "offerta dimostrativa trovata" : "offerte dimostrative trovate"} a ${city.name}`;
+      qs("#result-count").textContent = `${items.length} ${items.length === 1 ? "offerta trovata" : "offerte trovate"} nella demo`;
       setupFavorites();
     }
     Object.values(controls).filter(Boolean).forEach(c => c.addEventListener("change", render));
@@ -210,9 +199,7 @@
     if(!root) return;
     const id = new URLSearchParams(location.search).get("id") || DATA.listings[0]?.id;
     const l = getListingById(id);
-    document.title = `${l.type} in ${l.zone}, ${l.cityName || "Padova"} | StudentBnB`;
-    const detailCityLink=qs("#detail-city-link");
-    if(detailCityLink){detailCityLink.textContent=l.cityName || "Padova";detailCityLink.href=`padova.html?city=${encodeURIComponent(l.city || "padova")}`;}
+    document.title = `${l.type} in ${l.zone} | StudentBnB`;
     const gallery = (l.gallery && l.gallery.length ? l.gallery : [l.image]).slice(0,4);
     while(gallery.length < 4) gallery.push(gallery[gallery.length-1] || "assets/img/alloggio-1.webp");
     root.innerHTML = detailTemplate(l, gallery);
@@ -231,6 +218,7 @@
     const phone = (l.phone || "").replace(/\s/g,"");
     const expenseText = l.expensesIncluded ? "Spese incluse" : `Spese escluse${l.expenses ? `: circa ${money(l.expenses)}/mese` : ""}`;
     const agency = l.publisher === "Agenzia" ? `<dt>Costo agenzia</dt><dd>${escapeHtml(l.agencyFee || "Da dichiarare")}</dd>` : "";
+    const household = householdTemplate(l);
     return `
       <div class="detail-title-row">
         <div>
@@ -293,6 +281,8 @@
         </div>
       </div>
 
+      ${household}
+
       <div class="description-grid">
         <section class="info-card">
           <h2>Descrizione</h2><p>${escapeHtml(l.description || "")}</p>
@@ -301,7 +291,7 @@
             <div><h3>Servizi nelle vicinanze</h3><ul class="bullet-list">${nearby}</ul></div>
           </div>
         </section>
-        <section class="info-card map-card"><h2>Zona</h2><img src="assets/img/mappa-arcella.webp" alt="Rappresentazione indicativa della zona"><strong>${escapeHtml(l.zone)}, ${escapeHtml(l.cityName || "Padova")}</strong><p>Via e numero civico vengono comunicati direttamente dall’inserzionista.</p></section>
+        <section class="info-card map-card"><h2>Dove si trova</h2><img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona"><strong>${escapeHtml(l.zone)}, Padova (PD)</strong><p>La posizione esatta viene condivisa dall’inserzionista prima della visita.</p></section>
       </div>
 
       <div class="detail-footer-grid">
@@ -311,6 +301,32 @@
       </div>`;
   }
 
+  function householdTemplate(l){
+    const h = l.household || {};
+    const isWholeApartment = Number(l.roommates || 0) === 0 || l.arrangement === "Appartamento intero";
+    const composition = h.composition || (isWholeApartment ? "Appartamento intero" : `${l.roommates || "—"} coinquilini`);
+    const interests = (h.interests || []).map(x => `<span class="profile-chip yellow">${escapeHtml(x)}</span>`).join("");
+    const description = h.description || (isWholeApartment
+      ? "L’alloggio viene affittato interamente: non sono presenti coinquilini già residenti."
+      : "Il profilo completo dei coinquilini non è ancora stato compilato dall’inserzionista.");
+    return `
+      <section class="info-card household-panel" aria-labelledby="household-title">
+        <h2 id="household-title">👥 Con chi vivrai</h2>
+        <p>${escapeHtml(description)}</p>
+        <div class="household-grid">
+          <div class="household-stat"><span>Composizione</span><strong>${escapeHtml(composition)}</strong></div>
+          <div class="household-stat"><span>Età indicativa</span><strong>${escapeHtml(h.ageRange || "Da chiedere")}</strong></div>
+          <div class="household-stat"><span>Atmosfera</span><strong>${escapeHtml(h.atmosphere || "Da conoscere")}</strong></div>
+          <div class="household-stat"><span>Lingue parlate</span><strong>${escapeHtml(h.languages || "Da chiedere")}</strong></div>
+          <div class="household-stat"><span>Pulizie</span><strong>${escapeHtml(h.cleanliness || "Da concordare")}</strong></div>
+          <div class="household-stat"><span>Ospiti</span><strong>${escapeHtml(h.guests || "Da concordare")}</strong></div>
+          <div class="household-stat"><span>Cucina e pasti</span><strong>${escapeHtml(h.cooking || "Autonomi")}</strong></div>
+          <div class="household-stat"><span>Fumo e animali</span><strong>${escapeHtml(`${l.smokers || "Da chiedere"} · ${l.pets || "Da chiedere"}`)}</strong></div>
+        </div>
+        ${interests ? `<div class="household-story"><strong>Interessi condivisi</strong><div class="profile-chips">${interests}</div></div>` : ""}
+      </section>`;
+  }
+
   function setupPublish(){
     const form = qs("#publish-form");
     if(!form) return;
@@ -318,28 +334,17 @@
     const expenseAmountWrap = qs("#expense-amount-wrap");
     const agency = qs("#publisher-type");
     const agencyWrap = qs("#agency-fee-wrap");
-    const citySelect=qs("#city"), zoneSelect=qs("#zone"), photosInput=qs("#photos");
-    function syncZones(){
-      if(!citySelect || !zoneSelect) return;
-      const zones=DATA.cities.find(c=>c.slug===citySelect.value)?.zones || [];
-      zoneSelect.innerHTML='<option value="">Seleziona quartiere/zona</option>'+zones.map(z=>`<option>${escapeHtml(z)}</option>`).join('');
-    }
     function syncConditional(){
       if(expenseAmountWrap) expenseAmountWrap.classList.toggle("hidden", expenseIncluded?.value !== "no");
       if(agencyWrap) agencyWrap.classList.toggle("hidden", agency?.value !== "Agenzia");
     }
     expenseIncluded?.addEventListener("change",syncConditional);
     agency?.addEventListener("change",syncConditional);
-    citySelect?.addEventListener("change",syncZones);
-    photosInput?.addEventListener("change",()=>previewSelectedPhotos(photosInput));
     syncConditional();
-    syncZones();
 
-    qs("#preview-button")?.addEventListener("click", async () => {
+    qs("#preview-button")?.addEventListener("click", () => {
       if(!form.reportValidity()) return;
-      const gallery=await getProcessedPhotos(photosInput);if(!gallery.length)return;
       const l = formToListing(new FormData(form));
-      l.gallery=gallery;l.image=gallery[0];
       const preview = qs("#publish-preview");
       preview.innerHTML = listingCard(l);
       preview.classList.add("active");
@@ -347,51 +352,27 @@
       preview.scrollIntoView({behavior:"smooth",block:"center"});
     });
 
-    form.addEventListener("submit", async e => {
+    form.addEventListener("submit", e => {
       e.preventDefault();
       if(!form.reportValidity()) return;
-      const gallery=await getProcessedPhotos(photosInput);if(!gallery.length)return;
       const l = formToListing(new FormData(form));
-      l.gallery=gallery;l.image=gallery[0];
       const saved = getUserListings();
       saved.unshift(l);
-      try{localStorage.setItem("studentbnb_user_listings", JSON.stringify(saved));}catch{toast("Le fotografie occupano troppo spazio. Prova con meno immagini.");return;}
+      localStorage.setItem("studentbnb_user_listings", JSON.stringify(saved));
       const msg = qs("#publish-success");
       msg.classList.add("active");
-      msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di ${escapeHtml(l.cityName)} su questo dispositivo. <a href="padova.html?city=${encodeURIComponent(l.city)}" style="text-decoration:underline">Apri gli annunci</a>.`;
+      msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di Padova su questo dispositivo. <a href="padova.html" style="text-decoration:underline">Apri gli annunci</a>.`;
       msg.scrollIntoView({behavior:"smooth",block:"center"});
       form.reset();
-      form._processedPhotos=null;qs("#photo-preview").innerHTML="";qs("#photo-status").textContent="Nessuna fotografia selezionata.";qs("#photo-status").classList.remove("selected");
       syncConditional();
-      syncZones();
     });
-  }
-
-  function previewSelectedPhotos(input){
-    const files=[...(input?.files||[])];input.form._processedPhotos=null;
-    if(files.length>8){input.value="";toast("Puoi caricare al massimo 8 fotografie.");return previewSelectedPhotos(input);}
-    const root=qs("#photo-preview"),status=qs("#photo-status");root.innerHTML="";
-    files.forEach(file=>{const image=document.createElement("img");image.src=URL.createObjectURL(file);image.alt="Anteprima fotografia";image.onload=()=>URL.revokeObjectURL(image.src);root.appendChild(image)});
-    status.textContent=files.length?`${files.length} ${files.length===1?'fotografia selezionata':'fotografie selezionate'}. La prima sarà la copertina.`:"Nessuna fotografia selezionata.";status.classList.toggle("selected",files.length>0);
-  }
-
-  async function getProcessedPhotos(input){
-    const files=[...(input?.files||[])].slice(0,8);if(!files.length){toast("Carica almeno una fotografia.");return []}
-    if(input.form._processedPhotos)return input.form._processedPhotos;
-    toast("Preparazione fotografie in corso…");
-    try{input.form._processedPhotos=await Promise.all(files.map(compressPhoto));return input.form._processedPhotos;}
-    catch{toast("Una delle fotografie non può essere letta. Prova a sostituirla.");return []}
-  }
-
-  function compressPhoto(file){
-    return new Promise((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=1200,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.round(image.width*scale);canvas.height=Math.round(image.height*scale);canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);resolve(canvas.toDataURL("image/webp",.72))};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Immagine non valida"))};image.src=url});
   }
 
   function formToListing(fd){
     const id = `PD-DEMO-${Date.now().toString().slice(-6)}`;
     const included = fd.get("expensesIncluded") === "yes";
     return {
-      id, city:fd.get("city"), cityName:DATA.cities.find(c=>c.slug===fd.get("city"))?.name || "Padova", zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
+      id, city:fd.get("city"), zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
       arrangement:fd.get("arrangement"), price:Number(fd.get("price")), expensesIncluded:included,
       expenses:included ? 0 : Number(fd.get("expenses")||0), available:fd.get("available"),
       university:fd.get("university") || "Università", universityMinutes:Number(fd.get("universityMinutes")||0),
@@ -405,10 +386,165 @@
       bills:fd.getAll("bills"), description:fd.get("description"),
       rules:(fd.get("rules")||"").split("\n").filter(Boolean),
       nearby:(fd.get("nearby")||"").split("\n").filter(Boolean),
+      household:{
+        composition:fd.get("householdComposition") || (Number(fd.get("roommates")||0) ? `${fd.get("roommates")} coinquilini` : "Appartamento intero"),
+        ageRange:fd.get("householdAge") || "Da chiedere", languages:fd.get("householdLanguages") || "Da chiedere",
+        atmosphere:fd.get("householdAtmosphere") || "Da conoscere", cleanliness:fd.get("householdCleanliness") || "Da concordare",
+        guests:fd.get("householdGuests") || "Da concordare", cooking:fd.get("householdCooking") || "Autonomi",
+        interests:fd.getAll("householdInterests"), description:fd.get("householdDescription") || ""
+      },
       publisher:fd.get("publisherType"), agencyFee:fd.get("agencyFee"), phone:fd.get("phone"),
       email:fd.get("email"), whatsapp:(fd.get("whatsapp")||"").replace(/\D/g,""),
       published:"oggi", updated:"oggi"
     };
+  }
+
+  const ZONES = {
+    milano:["Centro","Città Studi","Bicocca","Bovisa","Lambrate","Loreto","Navigli","Porta Romana","Isola","Niguarda","San Siro","Sesto San Giovanni"],
+    torino:["Centro","San Salvario","Vanchiglia","Crocetta","Cenisia","Cit Turin","Santa Rita","Aurora","Lingotto","Mirafiori","Barriera di Milano","Parella"],
+    trento:["Centro storico","San Bartolomeo","San Pio X","Clarina","Cristo Re","Solteri","Mesiano","Povo","Mattarello","Gardolo"],
+    padova:["Centro","Portello","Arcella","Stanga","Forcellini","Ospedali","Sacra Famiglia","Madonna Pellegrina","Guizza","Crocefisso","Brusegana","Chiesanuova","Ponte di Brenta","Camin","Mortise","Ponte San Nicolò"],
+    trieste:["Centro","Barriera Vecchia","San Vito","San Giacomo","Roiano","Scorcola","Cologna","San Giovanni","Gretta","Opicina"],
+    bologna:["Centro storico","Bolognina","San Donato","Cirenaica","Mazzini","Murri","Saragozza","Barca","Navile","Santo Stefano"],
+    pisa:["Centro","Santa Maria","San Francesco","San Martino","Sant’Antonio","Porta a Lucca","Cisanello","Pratale","Don Bosco","Barbaricina"],
+    firenze:["Centro","Novoli","Rifredi","Careggi","Statuto","Campo di Marte","Gavinana","Isolotto","San Frediano","Coverciano"],
+    ancona:["Centro","Adriatico","Piano","Grazie","Brecce Bianche","Tavernelle","Torrette","Palombare","Posatora"],
+    roma:["San Lorenzo","Piazza Bologna","Tiburtina","Pigneto","Ostiense","Garbatella","Trastevere","Prati","Nomentano","Tuscolano","Tor Vergata","EUR","Centocelle","Monteverde"],
+    bari:["Murat","Carrassi","San Pasquale","Picone","Poggiofranco","Madonnella","Japigia","Libertà","Campus","Politecnico"],
+    napoli:["Centro storico","Chiaia","Vomero","Fuorigrotta","Arenella","Materdei","Mergellina","San Carlo all’Arena","Porto","Soccavo"],
+    cagliari:["Castello","Stampace","Marina","Villanova","Is Mirrionis","San Benedetto","Pirri","Monserrato","Genneruxi","La Vega"],
+    palermo:["Centro storico","Kalsa","Albergheria","Politeama","Libertà","Notarbartolo","Zisa","Noce","Oreto","Università","Monreale"]
+  };
+
+  function bindZoneSelector(citySelector, zoneSelector){
+    const city = qs(citySelector);
+    const zone = qs(zoneSelector);
+    if(!city || !zone) return;
+    const sync = () => {
+      const items = ZONES[city.value] || [];
+      zone.innerHTML = `<option value="">${items.length ? "Seleziona la zona" : "Prima seleziona la città"}</option>` + items.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+    };
+    city.addEventListener("change", sync);
+    sync();
+  }
+
+  function setupZoneSelectors(){
+    bindZoneSelector("#city", "#zone");
+    bindZoneSelector("#request-city", "#request-zone");
+  }
+
+  function requestCard(r){
+    const initials = String(r.name || "S").split(/\s+/).map(x => x[0]).join("").slice(0,2).toUpperCase();
+    const photo = r.photo ? `<img src="${escapeHtml(r.photo)}" alt="Foto profilo di ${escapeHtml(r.name)}">` : escapeHtml(initials);
+    const languages = (r.languages || []).map(x => `<span class="profile-chip">${escapeHtml(x)}</span>`).join("");
+    const interests = (r.interests || []).map(x => `<span class="profile-chip yellow">${escapeHtml(x)}</span>`).join("");
+    const wa = String(r.whatsapp || "").replace(/\D/g,"");
+    const phone = String(r.phone || "").replace(/\s/g,"");
+    return `
+      <article class="request-card" data-request-id="${escapeHtml(r.id)}">
+        <div class="student-avatar">${photo}</div>
+        <div>
+          <div class="request-card-head">
+            <div><h2>${escapeHtml(r.name)}${r.age ? `, ${escapeHtml(r.age)}` : ""}</h2><div class="request-subtitle">${escapeHtml(r.course || "Studente")} · ${escapeHtml(r.university || r.city)}</div></div>
+            <div class="request-budget">${money(r.budget)}<small>/mese max</small></div>
+          </div>
+          ${r.verified ? `<div class="verification-badge">✓ Profilo studente verificato</div>` : `<div class="request-subtitle">Profilo non ancora verificato</div>`}
+          <div class="profile-chips">${languages}${interests}</div>
+          <p class="request-summary">${escapeHtml(r.bio || "")}</p>
+          <div class="request-facts">
+            <div><span>Cerca</span><strong>${escapeHtml(r.type || "Alloggio")}</strong></div>
+            <div><span>Zone</span><strong>${escapeHtml(r.zones || "Qualsiasi zona")}</strong></div>
+            <div><span>Periodo</span><strong>${escapeHtml(r.availableFrom || "Da concordare")} – ${escapeHtml(r.availableTo || "flessibile")}</strong></div>
+            <div><span>Convivenza</span><strong>${escapeHtml(r.sociality || r.lifestyle || "Flessibile")}</strong></div>
+            <div><span>Fumo / animali</span><strong>${escapeHtml(`${r.smoking || "Da indicare"} · ${r.pets || "Da indicare"}`)}</strong></div>
+            <div><span>Ordine e cucina</span><strong>${escapeHtml(`${r.cleanliness || "Da indicare"} · ${r.cooking || "Da indicare"}`)}</strong></div>
+          </div>
+        </div>
+        <div class="request-card-actions">
+          ${wa ? `<a class="btn btn-green" href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno "+r.name+", ti contatto per la tua richiesta su StudentBnB "+r.id)}" target="_blank" rel="noopener">◉ WhatsApp</a>` : ""}
+          ${r.email ? `<a class="btn btn-blue" href="mailto:${escapeHtml(r.email)}?subject=${encodeURIComponent("Proposta alloggio StudentBnB "+r.id)}">✉ Email</a>` : ""}
+          ${phone ? `<a class="btn btn-white" href="tel:${escapeHtml(phone)}">☎ Chiama</a>` : ""}
+        </div>
+      </article>`;
+  }
+
+  function setupStudentRequestsPage(){
+    const root = qs("#student-request-results");
+    if(!root) return;
+    const city = qs("#student-filter-city");
+    const type = qs("#student-filter-type");
+    const budget = qs("#student-filter-budget");
+    const sort = qs("#student-filter-sort");
+    const render = () => {
+      let items = allStudentRequests().filter(r => {
+        if(city?.value && String(r.city).toLowerCase() !== city.value.toLowerCase()) return false;
+        if(type?.value && r.type !== type.value) return false;
+        if(budget?.value && Number(r.budget) < Number(budget.value)) return false;
+        return true;
+      });
+      if(sort?.value === "budget-asc") items.sort((a,b)=>a.budget-b.budget);
+      if(sort?.value === "budget-desc") items.sort((a,b)=>b.budget-a.budget);
+      root.innerHTML = items.length ? items.map(requestCard).join("") : `<div class="empty-state" style="grid-column:1/-1"><h3>Nessun profilo con questi filtri</h3><p>Prova a cambiare città, tipologia o budget.</p></div>`;
+      const count = qs("#student-request-count");
+      if(count) count.textContent = `${items.length} ${items.length === 1 ? "studente cerca" : "studenti cercano"} un alloggio`;
+    };
+    [city,type,budget,sort].filter(Boolean).forEach(x => x.addEventListener("change",render));
+    render();
+  }
+
+  function fileAsDataUrl(file){
+    return new Promise(resolve => {
+      if(!file){ resolve(""); return; }
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function setupStudentRequestForm(){
+    const form = qs("#student-request-form");
+    if(!form) return;
+    const photoInput = qs("#student-photo");
+    const photoPreview = qs("#student-photo-preview");
+    photoInput?.addEventListener("change", () => {
+      const file = photoInput.files?.[0];
+      if(!file || file.size > 1500000){
+        if(file) toast("La foto profilo deve pesare meno di 1,5 MB");
+        photoInput.value = "";
+        photoPreview?.classList.remove("active");
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      if(photoPreview){ photoPreview.src = url; photoPreview.classList.add("active"); }
+    });
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      if(!form.reportValidity()) return;
+      const fd = new FormData(form);
+      const photo = await fileAsDataUrl(photoInput?.files?.[0]);
+      const r = {
+        id:`RQ-DEMO-${Date.now().toString().slice(-6)}`,name:fd.get("name"),age:fd.get("age"),city:fd.get("cityLabel") || fd.get("city"),
+        zones:[fd.get("zone"),fd.get("otherZones")].filter(Boolean).join(", "),type:fd.get("type"),budget:Number(fd.get("budget")),
+        availableFrom:fd.get("availableFrom"),availableTo:fd.get("availableTo"),university:fd.get("university"),course:fd.get("course"),studyYear:fd.get("studyYear"),
+        languages:(fd.get("languages")||"").split(",").map(x=>x.trim()).filter(Boolean),smoking:fd.get("smoking"),pets:fd.get("pets"),
+        lifestyle:fd.get("lifestyle"),cleanliness:fd.get("cleanliness"),sociality:fd.get("sociality"),cooking:fd.get("cooking"),
+        interests:fd.getAll("interests"),bio:fd.get("bio"),email:fd.get("email"),phone:fd.get("phone"),
+        whatsapp:String(fd.get("whatsapp")||"").replace(/\D/g,""),photo,verified:false,published:"oggi"
+      };
+      const saved = getUserRequests();
+      saved.unshift(r);
+      localStorage.setItem("studentbnb_student_requests",JSON.stringify(saved));
+      const msg = qs("#request-success");
+      if(msg){
+        msg.classList.add("active");
+        msg.innerHTML = `<strong>Richiesta salvata nella demo.</strong><br>Il tuo profilo è ora visibile nella pagina <a href="studenti.html" style="text-decoration:underline">Studenti in cerca</a> su questo dispositivo.`;
+        msg.scrollIntoView({behavior:"smooth",block:"center"});
+      }
+      form.reset();
+      photoPreview?.classList.remove("active");
+      qs("#request-city")?.dispatchEvent(new Event("change"));
+    });
   }
 
   function escapeHtml(value){
@@ -421,6 +557,9 @@
     setupCityPage();
     setupDetail();
     setupPublish();
+    setupZoneSelectors();
+    setupStudentRequestForm();
+    setupStudentRequestsPage();
     setupFavorites();
   });
 })();

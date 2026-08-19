@@ -9,6 +9,9 @@ Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - pagina città dinamica con filtri e annunci pertinenti;
 - scheda annuncio completa e orientata alla trasparenza commerciale;
 - modulo di pubblicazione con scelta della città, costi, spese, deposito, durata e preavviso;
+- modulo “Cerco alloggio” con richiesta, budget, periodo e profilo studente;
+- pagina “Studenti in cerca” consultabile da proprietari e coinquilini;
+- profilo della convivenza negli annunci: composizione, atmosfera, lingue, pulizie, ospiti e interessi;
 - scelta guidata del quartiere/zona in base alla città selezionata;
 - caricamento da 1 a 8 fotografie con anteprima e scelta automatica della copertina;
 - preferiti, ricerca, filtri, galleria e annunci demo funzionanti;
@@ -18,7 +21,8 @@ COME PUBBLICARLO SU GITHUB PAGES
 1. Aprire la repository StudentBnB.
 2. Eliminare o sostituire i vecchi file del sito.
 3. Caricare il CONTENUTO di questa cartella nella root della repository:
-   index.html, padova.html, annuncio.html, pubblica.html, privacy.html,
+   index.html, padova.html, annuncio.html, pubblica.html, cerco.html,
+   studenti.html, privacy.html,
    404.html e la cartella assets.
 4. Fare Commit changes.
 5. Attendere 1-3 minuti e aggiornare la pagina con Ctrl+F5.
@@ -35,4 +39,6 @@ PAGINE
 - padova.html?city=padova: pagina dinamica per elenco e filtri di ogni città
 - annuncio.html?id=PD-AR-2456: scheda dettaglio
 - pubblica.html: modulo di pubblicazione
+- cerco.html: modulo per pubblicare una richiesta di alloggio e il profilo studente
+- studenti.html: elenco filtrabile degli studenti che cercano un alloggio
 - privacy.html: note demo, privacy e sicurezza
