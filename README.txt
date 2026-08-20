@@ -10,13 +10,19 @@ Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - scheda annuncio completa e orientata alla trasparenza commerciale;
 - modulo di pubblicazione con scelta della città, costi, spese, deposito, durata e preavviso;
 - modulo “Cerco alloggio” con richiesta, budget, periodo e profilo studente;
-- menu “Pubblica annuncio gratis” con scelta tra “Cerco casa” e “Cerco inquilino”;
-- banner di pubblicazione con le due azioni separate e senza sovrapposizioni grafiche;
+- menu “Pubblica annuncio gratis” con tre percorsi: “Cerco casa”, “Offro un alloggio” e “Ospitalità solidale”;
+- banner di pubblicazione con le tre azioni separate e senza sovrapposizioni grafiche;
+- sezione e pagina “Ospitalità solidale” per la convivenza tra persone anziane e studenti;
+- campi dedicati a canone agevolato, piccolo aiuto concordato e limite settimanale;
 - pagina “Studenti in cerca” consultabile da proprietari e coinquilini;
 - profilo della convivenza negli annunci: composizione, atmosfera, lingue, pulizie, ospiti e interessi;
 - scelta guidata del quartiere/zona in base alla città selezionata;
 - caricamento da 1 a 8 fotografie con anteprima e scelta automatica della copertina;
 - preferiti, ricerca, filtri, galleria e annunci demo funzionanti;
+- filtri per periodo, zona, università, lingue e ospitalità solidale;
+- salvataggio degli avvisi di ricerca sul dispositivo;
+- contatti protetti dietro accesso e badge di verifica;
+- moduli guidati a passaggi;
 - layout responsive per computer, tablet e smartphone.
 
 CITTÀ DISPONIBILI NEI MENU
@@ -27,17 +33,16 @@ Reggio Emilia, Roma, Salerno–Fisciano, Torino, Trento, Trieste,
 Venezia e Verona.
 
 COLLEGAMENTI EUROPEI NEL FOOTER
-StudentBnB Spagna, Portogallo, Francia, Polonia e Grecia. I collegamenti
-puntano ai rispettivi domini nazionali e saranno pienamente operativi quando
-i domini verranno registrati, configurati e pubblicati. Ogni Paese è
-accompagnato dalla propria bandiera.
+StudentBnB Spagna è collegato al dominio nazionale. Portogallo, Francia,
+Polonia e Grecia sono indicati come “prossimamente” fino alla pubblicazione
+dei rispettivi siti. Ogni Paese è accompagnato dalla propria bandiera.
 
 COME PUBBLICARLO SU GITHUB PAGES
 1. Aprire la repository StudentBnB.
 2. Eliminare o sostituire i vecchi file del sito.
 3. Caricare il CONTENUTO di questa cartella nella root della repository:
    index.html, padova.html, annuncio.html, pubblica.html, cerco.html,
-   studenti.html, privacy.html,
+   studenti.html, intergenerazionale.html, privacy.html,
    404.html e la cartella assets.
 4. Fare Commit changes.
 5. Attendere 1-3 minuti e aggiornare la pagina con Ctrl+F5.
@@ -56,4 +61,5 @@ PAGINE
 - pubblica.html: modulo di pubblicazione
 - cerco.html: modulo per pubblicare una richiesta di alloggio e il profilo studente
 - studenti.html: elenco filtrabile degli studenti che cercano un alloggio
+- intergenerazionale.html: presentazione e accesso all’ospitalità solidale tra generazioni
 - privacy.html: note demo, privacy e sicurezza
