@@ -3,10 +3,46 @@
   "use strict";
   const DATA = window.STUDENTBNB_DATA || {listings:[], cities:[]};
   const DEMO_REQUESTS = window.STUDENTBNB_REQUESTS || [];
+  const CITIES = window.STUDENTBNB_CITIES || DATA.cities || [];
+  const ZONES = window.STUDENTBNB_ZONES || {};
 
   const qs = (s, root=document) => root.querySelector(s);
   const qsa = (s, root=document) => [...root.querySelectorAll(s)];
   const money = n => new Intl.NumberFormat("it-IT", {style:"currency", currency:"EUR", maximumFractionDigits:0}).format(Number(n)||0);
+
+  function cityBySlug(slug){
+    return CITIES.find(city => city.slug === slug) || CITIES.find(city => city.slug === "padova") || {slug:"padova",name:"Padova"};
+  }
+
+  function citySlugFromValue(value){
+    const normalized = String(value || "").toLowerCase();
+    return CITIES.find(city => city.slug === normalized || city.name.toLowerCase() === normalized)?.slug || normalized;
+  }
+
+  function listingCitySlug(listing){
+    return citySlugFromValue(listing.city || "padova") || "padova";
+  }
+
+  function cityOptions(selected=""){
+    return CITIES.map(city => `<option value="${escapeHtml(city.slug)}"${city.slug === selected ? " selected" : ""}>${escapeHtml(city.name)}</option>`).join("");
+  }
+
+  function setupCitySelectors(){
+    const queryCity = citySlugFromValue(new URLSearchParams(location.search).get("city") || "");
+    const configurations = [
+      ["#home-city", "", "padova"],
+      ["#city", "Seleziona", queryCity],
+      ["#request-city", "Seleziona", queryCity],
+      ["#student-filter-city", "Tutte le città", ""]
+    ];
+    configurations.forEach(([selector, placeholder, fallback]) => {
+      const select = qs(selector);
+      if(!select) return;
+      const current = select.value || fallback;
+      select.innerHTML = (placeholder ? `<option value="">${placeholder}</option>` : "") + cityOptions(current);
+      if(current && CITIES.some(city => city.slug === current)) select.value = current;
+    });
+  }
 
   function getUserListings(){
     try { return JSON.parse(localStorage.getItem("studentbnb_user_listings") || "[]"); }
@@ -105,13 +141,9 @@
       form.addEventListener("submit", e => {
         e.preventDefault();
         const fd = new FormData(form);
-        const city = fd.get("city");
+        const city = citySlugFromValue(fd.get("city")) || "padova";
         const type = fd.get("type");
-        if(city !== "padova"){
-          toast("La demo operativa parte da Padova; le altre città saranno attivate progressivamente.");
-          return;
-        }
-        location.href = `padova.html?type=${encodeURIComponent(type || "")}`;
+        location.href = `padova.html?city=${encodeURIComponent(city)}&type=${encodeURIComponent(type || "")}`;
       });
     }
     qsa("[data-city-coming]").forEach(el => el.addEventListener("click", e => {
@@ -156,6 +188,20 @@
   function setupCityPage(){
     const list = qs("#listing-results");
     if(!list) return;
+    const params = new URLSearchParams(location.search);
+    const requestedCity = citySlugFromValue(params.get("city") || "padova");
+    const city = cityBySlug(requestedCity);
+    const citySlug = city.slug;
+    const cityName = city.name;
+    const cityImageSlugs = new Set(["bologna","firenze","milano","napoli","padova","pisa","roma","torino"]);
+    const heroImage = citySlug === "padova" ? "assets/img/padova-hero.webp" : cityImageSlugs.has(citySlug) ? `assets/img/citta-${citySlug}.webp` : "assets/img/italia-proposta1.webp";
+    document.title = `Alloggi per studenti a ${cityName} | StudentBnB`;
+    const metaDescription = qs('meta[name="description"]');
+    if(metaDescription) metaDescription.content = `Stanze, posti letto e appartamenti per studenti a ${cityName}, con costi, spese e condizioni confrontabili.`;
+    if(qs("#city-breadcrumb")) qs("#city-breadcrumb").textContent = cityName;
+    if(qs("#city-name")) qs("#city-name").textContent = cityName;
+    if(qs("#city-description")) qs("#city-description").textContent = `Scopri gli alloggi nelle zone universitarie di ${cityName}. Ogni offerta evidenzia costi, spese e condizioni contrattuali.`;
+    if(qs(".city-hero-bg")) qs(".city-hero-bg").style.backgroundImage = `url('${heroImage}')`;
     const controls = {
       zone: qs("#filter-zone"),
       type: qs("#filter-type"),
@@ -163,7 +209,9 @@
       expenses: qs("#filter-expenses"),
       sort: qs("#filter-sort")
     };
-    const params = new URLSearchParams(location.search);
+    if(controls.zone){
+      controls.zone.innerHTML = `<option value="">Tutte le zone</option>` + (ZONES[citySlug] || []).map(zone => `<option value="${escapeHtml(zone)}">${escapeHtml(zone)}</option>`).join("");
+    }
     if(params.get("type") && controls.type){
       const requested = params.get("type");
       const option = [...controls.type.options].find(o => o.value.toLowerCase().includes(requested.toLowerCase()) || requested.toLowerCase().includes(o.value.toLowerCase()));
@@ -171,6 +219,7 @@
     }
     function render(){
       let items = allListings().filter(l => {
+        if(listingCitySlug(l) !== citySlug) return false;
         if(controls.zone?.value && l.zone !== controls.zone.value) return false;
         if(controls.type?.value && l.type !== controls.type.value) return false;
         if(controls.price?.value && Number(l.price) > Number(controls.price.value)) return false;
@@ -182,8 +231,13 @@
       if(sort === "price-asc") items.sort((a,b) => a.price-b.price);
       if(sort === "price-desc") items.sort((a,b) => b.price-a.price);
       if(sort === "zone") items.sort((a,b) => a.zone.localeCompare(b.zone,"it"));
-      list.innerHTML = items.length ? items.map(listingCard).join("") : `<div class="empty-state"><h3>Nessun annuncio con questi filtri</h3><p>Prova ad ampliare la zona, il prezzo o la tipologia.</p></div>`;
-      qs("#result-count").textContent = `${items.length} ${items.length === 1 ? "offerta trovata" : "offerte trovate"} nella demo`;
+      list.innerHTML = items.length ? items.map(listingCard).join("") : `<div class="empty-state"><h3>Nessun annuncio disponibile a ${escapeHtml(cityName)}</h3><p>Il collegamento è attivo: puoi essere tra i primi a pubblicare un alloggio o una richiesta per questa città.</p><div class="empty-actions"><a class="btn btn-yellow" href="pubblica.html?city=${encodeURIComponent(citySlug)}">Pubblica un annuncio</a><a class="btn btn-white" href="cerco.html?city=${encodeURIComponent(citySlug)}">Cerco alloggio</a></div></div>`;
+      const count = qs("#result-count");
+      if(count) count.textContent = `${items.length} ${items.length === 1 ? "offerta trovata" : "offerte trovate"} a ${cityName}`;
+      const heroCount = qs("#city-count");
+      if(heroCount) heroCount.textContent = items.length ? `${items.length} ${items.length === 1 ? "annuncio disponibile" : "annunci disponibili"}` : "Città attiva — annunci in arrivo";
+      const pagination = qs(".pagination");
+      if(pagination) pagination.hidden = items.length < 6;
       setupFavorites();
     }
     Object.values(controls).filter(Boolean).forEach(c => c.addEventListener("change", render));
@@ -199,7 +253,13 @@
     if(!root) return;
     const id = new URLSearchParams(location.search).get("id") || DATA.listings[0]?.id;
     const l = getListingById(id);
-    document.title = `${l.type} in ${l.zone} | StudentBnB`;
+    const listingCity = cityBySlug(listingCitySlug(l));
+    document.title = `${l.type} in ${l.zone}, ${listingCity.name} | StudentBnB`;
+    const detailCityLink = qs("#detail-city-link");
+    if(detailCityLink){
+      detailCityLink.textContent = listingCity.name;
+      detailCityLink.href = `padova.html?city=${encodeURIComponent(listingCity.slug)}`;
+    }
     const gallery = (l.gallery && l.gallery.length ? l.gallery : [l.image]).slice(0,4);
     while(gallery.length < 4) gallery.push(gallery[gallery.length-1] || "assets/img/alloggio-1.webp");
     root.innerHTML = detailTemplate(l, gallery);
@@ -210,6 +270,7 @@
   }
 
   function detailTemplate(l, gallery){
+    const listingCity = cityBySlug(listingCitySlug(l));
     const billList = (l.bills || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     const rules = (l.rules || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     const nearby = (l.nearby || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
@@ -291,7 +352,7 @@
             <div><h3>Servizi nelle vicinanze</h3><ul class="bullet-list">${nearby}</ul></div>
           </div>
         </section>
-        <section class="info-card map-card"><h2>Dove si trova</h2><img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona"><strong>${escapeHtml(l.zone)}, Padova (PD)</strong><p>La posizione esatta viene condivisa dall’inserzionista prima della visita.</p></section>
+        <section class="info-card map-card"><h2>Dove si trova</h2><img src="assets/img/mappa-arcella.webp" alt="Mappa indicativa della zona"><strong>${escapeHtml(l.zone)}, ${escapeHtml(listingCity.name)}</strong><p>La posizione esatta viene condivisa dall’inserzionista prima della visita.</p></section>
       </div>
 
       <div class="detail-footer-grid">
@@ -360,8 +421,9 @@
       saved.unshift(l);
       localStorage.setItem("studentbnb_user_listings", JSON.stringify(saved));
       const msg = qs("#publish-success");
+      const publishedCity = cityBySlug(citySlugFromValue(l.city));
       msg.classList.add("active");
-      msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di Padova su questo dispositivo. <a href="padova.html" style="text-decoration:underline">Apri gli annunci</a>.`;
+      msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di ${escapeHtml(publishedCity.name)} su questo dispositivo. <a href="padova.html?city=${encodeURIComponent(publishedCity.slug)}" style="text-decoration:underline">Apri gli annunci</a>.`;
       msg.scrollIntoView({behavior:"smooth",block:"center"});
       form.reset();
       syncConditional();
@@ -398,23 +460,6 @@
       published:"oggi", updated:"oggi"
     };
   }
-
-  const ZONES = {
-    milano:["Centro","Città Studi","Bicocca","Bovisa","Lambrate","Loreto","Navigli","Porta Romana","Isola","Niguarda","San Siro","Sesto San Giovanni"],
-    torino:["Centro","San Salvario","Vanchiglia","Crocetta","Cenisia","Cit Turin","Santa Rita","Aurora","Lingotto","Mirafiori","Barriera di Milano","Parella"],
-    trento:["Centro storico","San Bartolomeo","San Pio X","Clarina","Cristo Re","Solteri","Mesiano","Povo","Mattarello","Gardolo"],
-    padova:["Centro","Portello","Arcella","Stanga","Forcellini","Ospedali","Sacra Famiglia","Madonna Pellegrina","Guizza","Crocefisso","Brusegana","Chiesanuova","Ponte di Brenta","Camin","Mortise","Ponte San Nicolò"],
-    trieste:["Centro","Barriera Vecchia","San Vito","San Giacomo","Roiano","Scorcola","Cologna","San Giovanni","Gretta","Opicina"],
-    bologna:["Centro storico","Bolognina","San Donato","Cirenaica","Mazzini","Murri","Saragozza","Barca","Navile","Santo Stefano"],
-    pisa:["Centro","Santa Maria","San Francesco","San Martino","Sant’Antonio","Porta a Lucca","Cisanello","Pratale","Don Bosco","Barbaricina"],
-    firenze:["Centro","Novoli","Rifredi","Careggi","Statuto","Campo di Marte","Gavinana","Isolotto","San Frediano","Coverciano"],
-    ancona:["Centro","Adriatico","Piano","Grazie","Brecce Bianche","Tavernelle","Torrette","Palombare","Posatora"],
-    roma:["San Lorenzo","Piazza Bologna","Tiburtina","Pigneto","Ostiense","Garbatella","Trastevere","Prati","Nomentano","Tuscolano","Tor Vergata","EUR","Centocelle","Monteverde"],
-    bari:["Murat","Carrassi","San Pasquale","Picone","Poggiofranco","Madonnella","Japigia","Libertà","Campus","Politecnico"],
-    napoli:["Centro storico","Chiaia","Vomero","Fuorigrotta","Arenella","Materdei","Mergellina","San Carlo all’Arena","Porto","Soccavo"],
-    cagliari:["Castello","Stampace","Marina","Villanova","Is Mirrionis","San Benedetto","Pirri","Monserrato","Genneruxi","La Vega"],
-    palermo:["Centro storico","Kalsa","Albergheria","Politeama","Libertà","Notarbartolo","Zisa","Noce","Oreto","Università","Monreale"]
-  };
 
   function bindZoneSelector(citySelector, zoneSelector){
     const city = qs(citySelector);
@@ -477,7 +522,7 @@
     const sort = qs("#student-filter-sort");
     const render = () => {
       let items = allStudentRequests().filter(r => {
-        if(city?.value && String(r.city).toLowerCase() !== city.value.toLowerCase()) return false;
+        if(city?.value && citySlugFromValue(r.city) !== city.value) return false;
         if(type?.value && r.type !== type.value) return false;
         if(budget?.value && Number(r.budget) < Number(budget.value)) return false;
         return true;
@@ -524,7 +569,7 @@
       const fd = new FormData(form);
       const photo = await fileAsDataUrl(photoInput?.files?.[0]);
       const r = {
-        id:`RQ-DEMO-${Date.now().toString().slice(-6)}`,name:fd.get("name"),age:fd.get("age"),city:fd.get("cityLabel") || fd.get("city"),
+        id:`RQ-DEMO-${Date.now().toString().slice(-6)}`,name:fd.get("name"),age:fd.get("age"),city:cityBySlug(citySlugFromValue(fd.get("city"))).name,
         zones:[fd.get("zone"),fd.get("otherZones")].filter(Boolean).join(", "),type:fd.get("type"),budget:Number(fd.get("budget")),
         availableFrom:fd.get("availableFrom"),availableTo:fd.get("availableTo"),university:fd.get("university"),course:fd.get("course"),studyYear:fd.get("studyYear"),
         languages:(fd.get("languages")||"").split(",").map(x=>x.trim()).filter(Boolean),smoking:fd.get("smoking"),pets:fd.get("pets"),
@@ -552,6 +597,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    setupCitySelectors();
     setupHeader();
     setupHome();
     setupCityPage();

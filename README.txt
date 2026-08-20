@@ -4,9 +4,9 @@ STUDENTBNB — PROPOSTA 1, VERSIONE MULTICITTÀ PUBBLICABILE
 Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - header giallo e identità StudentBnB;
 - grande mappa illustrata dell’Italia con città e monumenti;
-- navigazione dalla mappa a 14 città universitarie italiane;
-- esattamente 3 annunci dimostrativi fittizi per ogni città (42 totali);
-- pagina città dinamica con filtri e annunci pertinenti;
+- 14 città presenti sulla mappa, tutte dotate di un’area cliccabile;
+- 31 città e poli universitari disponibili nei menu, comprendendo i principali mercati fino alla fascia di circa 20.000 studenti;
+- pagina città dinamica con nome, quartieri, filtri e stato degli annunci pertinenti;
 - scheda annuncio completa e orientata alla trasparenza commerciale;
 - modulo di pubblicazione con scelta della città, costi, spese, deposito, durata e preavviso;
 - modulo “Cerco alloggio” con richiesta, budget, periodo e profilo studente;
@@ -16,6 +16,18 @@ Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - caricamento da 1 a 8 fotografie con anteprima e scelta automatica della copertina;
 - preferiti, ricerca, filtri, galleria e annunci demo funzionanti;
 - layout responsive per computer, tablet e smartphone.
+
+CITTÀ DISPONIBILI NEI MENU
+Padova, Ancona, Bari, Bergamo, Bologna, Cagliari, Caserta, Catania,
+Chieti, Cosenza–Rende, Ferrara, Firenze, Genova, Messina, Milano,
+Modena, Napoli, Palermo, Parma, Pavia, Perugia, Pescara, Pisa,
+Reggio Emilia, Roma, Salerno–Fisciano, Torino, Trento, Trieste,
+Venezia e Verona.
+
+COLLEGAMENTI EUROPEI NEL FOOTER
+StudentBnB Spagna, Portogallo, Francia, Polonia e Grecia. I collegamenti
+puntano ai rispettivi domini nazionali e saranno pienamente operativi quando
+i domini verranno registrati, configurati e pubblicati.
 
 COME PUBBLICARLO SU GITHUB PAGES
 1. Aprire la repository StudentBnB.
