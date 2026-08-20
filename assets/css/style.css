@@ -121,7 +121,7 @@ button{cursor:pointer}
 .city-card:after{display:none}
 .city-card strong{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .publish-banner{margin:10px 0 38px;background:linear-gradient(90deg,#fff8e4,#fff1bd);border:1px solid #f0d47c;border-radius:18px;display:grid;grid-template-columns:120px minmax(220px,.75fr) minmax(480px,1.45fr);align-items:center;gap:22px;padding:22px 26px;min-height:170px}
-.student-illustration{font-size:78px;text-align:center}
+.student-illustration{width:96px;height:96px;justify-self:center;background:url("../img/student-publish.svg") center/contain no-repeat;font-size:0;line-height:0}
 .publish-banner h3{font-size:26px;margin:0 0 3px}
 .publish-banner p{margin:0;color:#444}
 .publish-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -305,12 +305,12 @@ button{cursor:pointer}
 .footer-international strong{font-size:15px}
 .footer-country-links{display:flex;gap:10px;flex-wrap:wrap}
 .footer-country-links a{color:#fff;border:1px solid #51545a;border-radius:999px;padding:7px 12px;font-size:13px;transition:.18s background,.18s border-color}
-.footer-country-links a:before{font-size:17px;line-height:1;margin-right:7px;vertical-align:-1px}
-.footer-country-links a[href*="studentbnb.es"]:before{content:"🇪🇸"}
-.footer-country-links a[href*="studentbnb.pt"]:before{content:"🇵🇹"}
-.footer-country-links a[href*="studentbnb.fr"]:before{content:"🇫🇷"}
-.footer-country-links a[href*="studentbnb.pl"]:before{content:"🇵🇱"}
-.footer-country-links a[href*="studentbnb.gr"]:before{content:"🇬🇷"}
+.footer-country-links a:before{content:"";display:inline-block;width:24px;height:16px;margin-right:7px;vertical-align:-3px;background-position:center;background-size:cover;background-repeat:no-repeat;border:1px solid rgba(255,255,255,.5);border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.footer-country-links a[href*="studentbnb.es"]:before{background-image:url("../img/flag-es.svg")}
+.footer-country-links a[href*="studentbnb.pt"]:before{background-image:url("../img/flag-pt.svg")}
+.footer-country-links a[href*="studentbnb.fr"]:before{background-image:url("../img/flag-fr.svg")}
+.footer-country-links a[href*="studentbnb.pl"]:before{background-image:url("../img/flag-pl.svg")}
+.footer-country-links a[href*="studentbnb.gr"]:before{background-image:url("../img/flag-gr.svg")}
 .footer-country-links a:hover,.footer-country-links a:focus{background:#ffc400;border-color:#ffc400;color:#171717}
 .footer-bottom{border-top:1px solid #36393d;margin-top:30px;padding-top:18px;color:#989da3;font-size:13px;display:flex;justify-content:space-between}
 
@@ -380,7 +380,7 @@ button{cursor:pointer}
   .map-stage img{height:100%;min-height:0}
   .city-grid{grid-template-columns:repeat(2,1fr)}
   .publish-banner{grid-template-columns:1fr;text-align:center;padding:24px}
-  .student-illustration{font-size:60px}
+  .student-illustration{width:78px;height:78px}
   .publish-choice-grid{grid-template-columns:1fr;width:100%;text-align:left}
   .stats-strip{grid-template-columns:1fr}
   .stat{border-right:0;border-bottom:1px solid var(--line);padding:15px}
