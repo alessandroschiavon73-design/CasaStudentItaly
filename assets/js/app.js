@@ -9,6 +9,11 @@
   const qs = (s, root=document) => root.querySelector(s);
   const qsa = (s, root=document) => [...root.querySelectorAll(s)];
   const money = n => new Intl.NumberFormat("it-IT", {style:"currency", currency:"EUR", maximumFractionDigits:0}).format(Number(n)||0);
+  const formatDate = (iso, fallback="Da concordare") => {
+    if(!iso) return fallback;
+    const date = new Date(`${iso}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? fallback : new Intl.DateTimeFormat("it-IT", {day:"numeric",month:"long",year:"numeric"}).format(date);
+  };
 
   function cityBySlug(slug){
     return CITIES.find(city => city.slug === slug) || CITIES.find(city => city.slug === "padova") || {slug:"padova",name:"Padova"};
@@ -101,7 +106,7 @@
         localStorage.setItem("studentbnb_user", String(email));
         qs("#login-modal")?.classList.remove("active");
         updateAccountLabel();
-        toast("Accesso demo effettuato");
+        toast("Accesso effettuato");
       });
     }
     updateAccountLabel();
@@ -138,7 +143,8 @@
       menu.hidden = true;
       menu.innerHTML = `
         <a href="cerco.html"><span class="choice-icon" aria-hidden="true">🏠</span><span><strong>Cerco casa</strong><small>Pubblica la tua richiesta e fatti contattare.</small></span><b aria-hidden="true">›</b></a>
-        <a href="pubblica.html"><span class="choice-icon" aria-hidden="true">👥</span><span><strong>Cerco inquilino</strong><small>Pubblica una stanza, un posto letto o un alloggio.</small></span><b aria-hidden="true">›</b></a>`;
+        <a href="pubblica.html"><span class="choice-icon" aria-hidden="true">🔑</span><span><strong>Offro un alloggio</strong><small>Pubblica una stanza, un posto letto o un appartamento.</small></span><b aria-hidden="true">›</b></a>
+        <a href="intergenerazionale.html"><span class="choice-icon" aria-hidden="true">🤝</span><span><strong>Ospitalità solidale</strong><small>Una stanza agevolata in cambio di un piccolo aiuto.</small></span><b aria-hidden="true">›</b></a>`;
       wrapper.appendChild(menu);
       trigger.setAttribute("aria-haspopup","true");
       trigger.setAttribute("aria-controls",menuId);
@@ -196,6 +202,10 @@
       e.preventDefault();
       toast(`${el.getAttribute("data-city-coming")} sarà attivata dopo il lancio pilota di Padova.`);
     }));
+    qsa("[data-country-coming]").forEach(el => el.addEventListener("click", e => {
+      e.preventDefault();
+      toast(`StudentBnB ${el.getAttribute("data-country-coming")} sarà disponibile prossimamente.`);
+    }));
   }
 
   function listingCard(l){
@@ -212,9 +222,10 @@
             <h3><a href="annuncio.html?id=${encodeURIComponent(l.id)}">${escapeHtml(l.zone)}</a></h3>
             <span class="pill">${escapeHtml(l.tag || "offerta trasparente")}</span>
           </div>
-          <div class="listing-meta"><span>♙ ${escapeHtml(l.type)}</span><span>${escapeHtml(l.arrangement || "")}</span></div>
+          <div class="listing-meta"><span>♙ ${escapeHtml(l.type)}</span><span>${escapeHtml(l.arrangement || "")}</span>${l.verified ? `<span class="verification-badge">✓ Inserzionista verificato</span>` : ""}</div>
+          ${l.intergenerational?.enabled ? `<span class="solidarity-badge">🤝 Ospitalità solidale</span>` : ""}
           <div class="listing-submeta">
-            <span>Disponibile ${escapeHtml(l.available || "da concordare")}</span>
+            <span>Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || "da concordare"))}</span>
             <span>🚲 ${escapeHtml(l.university || "Università")}: ${escapeHtml(String(l.universityMinutes || "—"))} min</span>
             <span>🚌 Centro: ${escapeHtml(String(l.centerMinutes || "—"))} min</span>
             ${l.household?.atmosphere ? `<span>👥 ${escapeHtml(l.household.atmosphere)}</span>` : ""}
@@ -253,6 +264,8 @@
       type: qs("#filter-type"),
       price: qs("#filter-price"),
       expenses: qs("#filter-expenses"),
+      arrangement: qs("#filter-arrangement"),
+      available: qs("#filter-available"),
       sort: qs("#filter-sort")
     };
     if(controls.zone){
@@ -263,6 +276,9 @@
       const option = [...controls.type.options].find(o => o.value.toLowerCase().includes(requested.toLowerCase()) || requested.toLowerCase().includes(o.value.toLowerCase()));
       if(option) controls.type.value = option.value;
     }
+    if(params.get("formula") === "intergenerazionale" && controls.arrangement){
+      controls.arrangement.value = "intergenerational";
+    }
     function render(){
       let items = allListings().filter(l => {
         if(listingCitySlug(l) !== citySlug) return false;
@@ -271,6 +287,9 @@
         if(controls.price?.value && Number(l.price) > Number(controls.price.value)) return false;
         if(controls.expenses?.value === "included" && !l.expensesIncluded) return false;
         if(controls.expenses?.value === "excluded" && l.expensesIncluded) return false;
+        if(controls.arrangement?.value === "intergenerational" && !l.intergenerational?.enabled) return false;
+        if(controls.arrangement?.value === "standard" && l.intergenerational?.enabled) return false;
+        if(controls.available?.value && l.availableISO && l.availableISO > controls.available.value) return false;
         return true;
       });
       const sort = controls.sort?.value;
@@ -313,6 +332,7 @@
       qs("#main-photo", root).src = btn.dataset.src;
     }));
     setupFavorites();
+    setupProtectedContacts();
   }
 
   function detailTemplate(l, gallery){
@@ -330,7 +350,8 @@
       <div class="detail-title-row">
         <div>
           <h1>${escapeHtml(l.type)} in ${escapeHtml(l.zone)} <span class="pill">${escapeHtml(l.tag || "")}</span></h1>
-          <div class="top-meta"><span>♙ ${escapeHtml(l.type)}</span><span>⌂ ${escapeHtml(l.arrangement || "")}</span><span>▣ Disponibile ${escapeHtml(l.available || "")}</span></div>
+          <div class="top-meta"><span>♙ ${escapeHtml(l.type)}</span><span>⌂ ${escapeHtml(l.arrangement || "")}</span><span>▣ Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || ""))}</span>${l.verified ? `<span class="verification-badge">✓ Inserzionista verificato</span>` : ""}</div>
+          ${l.intergenerational?.enabled ? `<span class="solidarity-badge">🤝 Ospitalità solidale intergenerazionale</span>` : ""}
         </div>
         <div class="detail-price"><div class="price">${money(l.price)}<small>/mese</small></div><span class="expenses-badge ${l.expensesIncluded?"included":"excluded"}">${expenseText}</span></div>
         <button class="favorite-button" data-favorite="${escapeHtml(l.id)}" aria-label="Aggiungi ai preferiti">♡</button>
@@ -347,10 +368,11 @@
           <h2>Contatta ${l.publisher === "Agenzia" ? "l’agenzia" : "l’inserzionista"}</h2>
           <p>Fai domande sui costi, sul contratto e sulla disponibilità prima di fissare la visita.</p>
           <div class="contact-stack">
-            ${wa ? `<a class="btn btn-green btn-block" href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno, vi contatto per l’annuncio StudentBnB "+l.id)}" target="_blank" rel="noopener">◉ Contatta su WhatsApp</a>` : ""}
-            <a class="btn btn-blue btn-block" href="mailto:${email}?subject=${encodeURIComponent("Richiesta informazioni annuncio "+l.id)}">✉ Invia un’email</a>
-            ${phone ? `<a class="btn btn-white btn-block" href="tel:${phone}">☎ Chiama: ${escapeHtml(l.phone)}</a>` : ""}
+            ${wa ? `<a class="btn btn-green btn-block" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno, vi contatto per l’annuncio StudentBnB "+l.id)}" target="_blank" rel="noopener">◉ Contatta su WhatsApp</a>` : ""}
+            <a class="btn btn-blue btn-block" data-protected-contact href="mailto:${email}?subject=${encodeURIComponent("Richiesta informazioni annuncio "+l.id)}">✉ Invia un’email</a>
+            ${phone ? `<a class="btn btn-white btn-block" data-protected-contact href="tel:${phone}">☎ Chiama: ${escapeHtml(l.phone)}</a>` : ""}
           </div>
+          <p class="micro-note">I contatti sono protetti: accedi gratuitamente per utilizzarli.</p>
           <div class="safety-box"><strong>Affitta in sicurezza</strong><br>Non inviare denaro prima di aver verificato l’alloggio, il contratto e l’identità dell’inserzionista.</div>
         </aside>
       </div>
@@ -389,6 +411,7 @@
       </div>
 
       ${household}
+      ${intergenerationalTemplate(l)}
 
       <div class="description-grid">
         <section class="info-card">
@@ -402,10 +425,27 @@
       </div>
 
       <div class="detail-footer-grid">
-        <section class="info-card"><h2>▣ Disponibilità</h2><strong>Disponibile ${escapeHtml(l.available || "")}</strong><br><span>Permanenza minima: ${escapeHtml(l.minimumStay || "da concordare")}</span><br><span>Preavviso: ${escapeHtml(l.notice || "da concordare")}</span></section>
-        <section class="info-card"><h2>◎ Chi pubblica</h2><strong>${escapeHtml(l.publisher || "Privato")}</strong><br><span>Annuncio pubblicato il ${escapeHtml(l.published || "oggi")}</span><br><span>Ultimo aggiornamento: ${escapeHtml(l.updated || "oggi")}</span></section>
+        <section class="info-card"><h2>▣ Disponibilità</h2><strong>Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || ""))}</strong><br><span>Permanenza minima: ${escapeHtml(l.minimumStay || "da concordare")}</span><br><span>Preavviso: ${escapeHtml(l.notice || "da concordare")}</span></section>
+        <section class="info-card"><h2>◎ Chi pubblica</h2><strong>${escapeHtml(l.publisher || "Privato")}</strong>${l.verified ? `<br><span class="verification-badge">✓ Email verificata</span>` : ""}<br><span>Annuncio pubblicato il ${escapeHtml(l.published || "oggi")}</span><br><span>Ultimo aggiornamento: ${escapeHtml(l.updated || "oggi")}</span></section>
         <section class="info-card"><h2>◇ ID annuncio</h2><strong>#${escapeHtml(l.id)}</strong><br><a href="mailto:segnalazioni@studentbnb.it?subject=${encodeURIComponent("Segnalazione annuncio "+l.id)}" style="color:#1565a8;text-decoration:underline">Segnala annuncio</a></section>
       </div>`;
+  }
+
+  function intergenerationalTemplate(l){
+    const data = l.intergenerational;
+    if(!data?.enabled) return "";
+    const help = (data.help || []).map(item => `<span>${escapeHtml(item)}</span>`).join("");
+    return `
+      <section class="info-card intergenerational-fields" aria-labelledby="solidarity-detail-title">
+        <h2 id="solidarity-detail-title">🤝 Ospitalità solidale intergenerazionale</h2>
+        <p>La stanza è proposta a prezzo agevolato in cambio di una presenza cordiale e di piccoli aiuti concordati.</p>
+        <div class="solidarity-example-list">${help || "<span>Aiuto da concordare insieme</span>"}</div>
+        <div class="household-grid" style="margin-top:14px">
+          <div class="household-stat"><span>Impegno indicativo</span><strong>${escapeHtml(data.hours || "Da concordare")}</strong></div>
+          <div class="household-stat"><span>Riduzione del canone</span><strong>${data.discount ? money(data.discount)+" al mese" : "Già compresa nel prezzo"}</strong></div>
+        </div>
+        <p class="micro-note">Il piccolo aiuto non comprende assistenza sanitaria, assistenza personale, somministrazione di farmaci o lavoro professionale.</p>
+      </section>`;
   }
 
   function householdTemplate(l){
@@ -441,12 +481,19 @@
     const expenseAmountWrap = qs("#expense-amount-wrap");
     const agency = qs("#publisher-type");
     const agencyWrap = qs("#agency-fee-wrap");
+    const arrangement = qs("#arrangement");
+    const intergenerationalWrap = qs("#intergenerational-host-fields");
     function syncConditional(){
       if(expenseAmountWrap) expenseAmountWrap.classList.toggle("hidden", expenseIncluded?.value !== "no");
       if(agencyWrap) agencyWrap.classList.toggle("hidden", agency?.value !== "Agenzia");
+      if(intergenerationalWrap) intergenerationalWrap.classList.toggle("hidden", arrangement?.value !== "Ospitalità intergenerazionale");
     }
     expenseIncluded?.addEventListener("change",syncConditional);
     agency?.addEventListener("change",syncConditional);
+    arrangement?.addEventListener("change",syncConditional);
+    if(new URLSearchParams(location.search).get("formula") === "intergenerazionale" && arrangement){
+      arrangement.value = "Ospitalità intergenerazionale";
+    }
     syncConditional();
 
     qs("#preview-button")?.addEventListener("click", () => {
@@ -469,7 +516,7 @@
       const msg = qs("#publish-success");
       const publishedCity = cityBySlug(citySlugFromValue(l.city));
       msg.classList.add("active");
-      msg.innerHTML = `<strong>Annuncio salvato nella demo.</strong><br>È ora visibile nell’elenco di ${escapeHtml(publishedCity.name)} su questo dispositivo. <a href="padova.html?city=${encodeURIComponent(publishedCity.slug)}" style="text-decoration:underline">Apri gli annunci</a>.`;
+      msg.innerHTML = `<strong>Annuncio salvato.</strong><br>È ora visibile nell’elenco di ${escapeHtml(publishedCity.name)} su questo dispositivo. <a href="padova.html?city=${encodeURIComponent(publishedCity.slug)}" style="text-decoration:underline">Apri gli annunci</a>.`;
       msg.scrollIntoView({behavior:"smooth",block:"center"});
       form.reset();
       syncConditional();
@@ -482,7 +529,7 @@
     return {
       id, city:fd.get("city"), zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
       arrangement:fd.get("arrangement"), price:Number(fd.get("price")), expensesIncluded:included,
-      expenses:included ? 0 : Number(fd.get("expenses")||0), available:fd.get("available"),
+      expenses:included ? 0 : Number(fd.get("expenses")||0), availableISO:fd.get("available"), available:formatDate(fd.get("available"),"Da concordare"),
       university:fd.get("university") || "Università", universityMinutes:Number(fd.get("universityMinutes")||0),
       centerMinutes:Number(fd.get("centerMinutes")||0), image:"assets/img/alloggio-1.webp",
       gallery:["assets/img/camera.webp","assets/img/cucina.webp","assets/img/bagno.webp","assets/img/corridoio.webp"],
@@ -501,9 +548,14 @@
         guests:fd.get("householdGuests") || "Da concordare", cooking:fd.get("householdCooking") || "Autonomi",
         interests:fd.getAll("householdInterests"), description:fd.get("householdDescription") || ""
       },
+      intergenerational:{
+        enabled:fd.get("arrangement") === "Ospitalità intergenerazionale",
+        help:fd.getAll("intergenerationalHelp"),hours:fd.get("intergenerationalHours"),
+        discount:Number(fd.get("intergenerationalDiscount")||0),notes:fd.get("intergenerationalNotes") || ""
+      },
       publisher:fd.get("publisherType"), agencyFee:fd.get("agencyFee"), phone:fd.get("phone"),
       email:fd.get("email"), whatsapp:(fd.get("whatsapp")||"").replace(/\D/g,""),
-      published:"oggi", updated:"oggi"
+      verified:false,published:"oggi", updated:"oggi"
     };
   }
 
@@ -532,7 +584,7 @@
     const wa = String(r.whatsapp || "").replace(/\D/g,"");
     const phone = String(r.phone || "").replace(/\s/g,"");
     return `
-      <article class="request-card" data-request-id="${escapeHtml(r.id)}">
+      <article class="request-card${r.livingModel === "intergenerational" ? " intergenerational" : ""}" data-request-id="${escapeHtml(r.id)}">
         <div class="student-avatar">${photo}</div>
         <div>
           <div class="request-card-head">
@@ -540,21 +592,23 @@
             <div class="request-budget">${money(r.budget)}<small>/mese max</small></div>
           </div>
           ${r.verified ? `<div class="verification-badge">✓ Profilo studente verificato</div>` : `<div class="request-subtitle">Profilo non ancora verificato</div>`}
+          ${r.livingModel === "intergenerational" ? `<div class="solidarity-badge">🤝 Disponibile all’ospitalità solidale</div>` : ""}
           <div class="profile-chips">${languages}${interests}</div>
           <p class="request-summary">${escapeHtml(r.bio || "")}</p>
           <div class="request-facts">
             <div><span>Cerca</span><strong>${escapeHtml(r.type || "Alloggio")}</strong></div>
             <div><span>Zone</span><strong>${escapeHtml(r.zones || "Qualsiasi zona")}</strong></div>
-            <div><span>Periodo</span><strong>${escapeHtml(r.availableFrom || "Da concordare")} – ${escapeHtml(r.availableTo || "flessibile")}</strong></div>
+            <div><span>Periodo</span><strong>${escapeHtml(formatDate(r.availableFromISO,r.availableFrom || "Da concordare"))} – ${escapeHtml(formatDate(r.availableToISO,r.availableTo || "flessibile"))}</strong></div>
             <div><span>Convivenza</span><strong>${escapeHtml(r.sociality || r.lifestyle || "Flessibile")}</strong></div>
             <div><span>Fumo / animali</span><strong>${escapeHtml(`${r.smoking || "Da indicare"} · ${r.pets || "Da indicare"}`)}</strong></div>
             <div><span>Ordine e cucina</span><strong>${escapeHtml(`${r.cleanliness || "Da indicare"} · ${r.cooking || "Da indicare"}`)}</strong></div>
+            ${r.livingModel === "intergenerational" ? `<div><span>Piccolo aiuto</span><strong>${escapeHtml((r.intergenerationalHelp || []).join(", ") || "Da concordare")}</strong></div><div><span>Tempo massimo</span><strong>${escapeHtml(r.intergenerationalHours || "Da concordare")}</strong></div>` : ""}
           </div>
         </div>
         <div class="request-card-actions">
-          ${wa ? `<a class="btn btn-green" href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno "+r.name+", ti contatto per la tua richiesta su StudentBnB "+r.id)}" target="_blank" rel="noopener">◉ WhatsApp</a>` : ""}
-          ${r.email ? `<a class="btn btn-blue" href="mailto:${escapeHtml(r.email)}?subject=${encodeURIComponent("Proposta alloggio StudentBnB "+r.id)}">✉ Email</a>` : ""}
-          ${phone ? `<a class="btn btn-white" href="tel:${escapeHtml(phone)}">☎ Chiama</a>` : ""}
+          ${wa ? `<a class="btn btn-green" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno "+r.name+", ti contatto per la tua richiesta su StudentBnB "+r.id)}" target="_blank" rel="noopener">◉ WhatsApp</a>` : ""}
+          ${r.email ? `<a class="btn btn-blue" data-protected-contact href="mailto:${escapeHtml(r.email)}?subject=${encodeURIComponent("Proposta alloggio StudentBnB "+r.id)}">✉ Email</a>` : ""}
+          ${phone ? `<a class="btn btn-white" data-protected-contact href="tel:${escapeHtml(phone)}">☎ Chiama</a>` : ""}
         </div>
       </article>`;
   }
@@ -563,14 +617,33 @@
     const root = qs("#student-request-results");
     if(!root) return;
     const city = qs("#student-filter-city");
+    const zone = qs("#student-filter-zone");
     const type = qs("#student-filter-type");
     const budget = qs("#student-filter-budget");
+    const available = qs("#student-filter-available");
+    const livingModel = qs("#student-filter-living-model");
+    const university = qs("#student-filter-university");
+    const language = qs("#student-filter-language");
+    const smoking = qs("#student-filter-smoking");
     const sort = qs("#student-filter-sort");
+    const syncZones = () => {
+      if(!zone) return;
+      const zones = city?.value ? (ZONES[city.value] || []) : [];
+      zone.innerHTML = `<option value="">Tutte le zone</option>` + zones.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
+    };
+    city?.addEventListener("change",syncZones);
+    syncZones();
     const render = () => {
       let items = allStudentRequests().filter(r => {
         if(city?.value && citySlugFromValue(r.city) !== city.value) return false;
+        if(zone?.value && !String(r.zones || "").toLowerCase().includes(zone.value.toLowerCase())) return false;
         if(type?.value && r.type !== type.value) return false;
         if(budget?.value && Number(r.budget) < Number(budget.value)) return false;
+        if(available?.value && r.availableFromISO && r.availableFromISO > available.value) return false;
+        if(livingModel?.value && r.livingModel !== livingModel.value) return false;
+        if(university?.value && !`${r.university || ""} ${r.course || ""}`.toLowerCase().includes(university.value.toLowerCase())) return false;
+        if(language?.value && !(r.languages || []).some(item => item.toLowerCase().includes(language.value.toLowerCase()))) return false;
+        if(smoking?.value && !String(r.smoking || "").toLowerCase().includes(smoking.value.toLowerCase())) return false;
         return true;
       });
       if(sort?.value === "budget-asc") items.sort((a,b)=>a.budget-b.budget);
@@ -578,8 +651,11 @@
       root.innerHTML = items.length ? items.map(requestCard).join("") : `<div class="empty-state" style="grid-column:1/-1"><h3>Nessun profilo con questi filtri</h3><p>Prova a cambiare città, tipologia o budget.</p></div>`;
       const count = qs("#student-request-count");
       if(count) count.textContent = `${items.length} ${items.length === 1 ? "studente cerca" : "studenti cercano"} un alloggio`;
+      setupProtectedContacts();
     };
-    [city,type,budget,sort].filter(Boolean).forEach(x => x.addEventListener("change",render));
+    [city,zone,type,budget,available,livingModel,university,language,smoking,sort].filter(Boolean).forEach(x => {
+      x.addEventListener(x.tagName === "INPUT" ? "input" : "change",render);
+    });
     render();
   }
 
@@ -598,6 +674,14 @@
     if(!form) return;
     const photoInput = qs("#student-photo");
     const photoPreview = qs("#student-photo-preview");
+    const livingModel = qs("#student-living-model");
+    const intergenerationalWrap = qs("#student-intergenerational-fields");
+    const syncLivingModel = () => intergenerationalWrap?.classList.toggle("hidden", livingModel?.value !== "intergenerational");
+    livingModel?.addEventListener("change",syncLivingModel);
+    if(new URLSearchParams(location.search).get("formula") === "intergenerazionale" && livingModel){
+      livingModel.value = "intergenerational";
+    }
+    syncLivingModel();
     photoInput?.addEventListener("change", () => {
       const file = photoInput.files?.[0];
       if(!file || file.size > 1500000){
@@ -617,9 +701,10 @@
       const r = {
         id:`RQ-DEMO-${Date.now().toString().slice(-6)}`,name:fd.get("name"),age:fd.get("age"),city:cityBySlug(citySlugFromValue(fd.get("city"))).name,
         zones:[fd.get("zone"),fd.get("otherZones")].filter(Boolean).join(", "),type:fd.get("type"),budget:Number(fd.get("budget")),
-        availableFrom:fd.get("availableFrom"),availableTo:fd.get("availableTo"),university:fd.get("university"),course:fd.get("course"),studyYear:fd.get("studyYear"),
+        availableFromISO:fd.get("availableFrom"),availableToISO:fd.get("availableTo"),availableFrom:formatDate(fd.get("availableFrom"),"Da concordare"),availableTo:formatDate(fd.get("availableTo"),"Flessibile"),university:fd.get("university"),course:fd.get("course"),studyYear:fd.get("studyYear"),
         languages:(fd.get("languages")||"").split(",").map(x=>x.trim()).filter(Boolean),smoking:fd.get("smoking"),pets:fd.get("pets"),
         lifestyle:fd.get("lifestyle"),cleanliness:fd.get("cleanliness"),sociality:fd.get("sociality"),cooking:fd.get("cooking"),
+        livingModel:fd.get("livingModel") || "standard",intergenerationalHelp:fd.getAll("intergenerationalHelp"),intergenerationalHours:fd.get("intergenerationalHours"),
         interests:fd.getAll("interests"),bio:fd.get("bio"),email:fd.get("email"),phone:fd.get("phone"),
         whatsapp:String(fd.get("whatsapp")||"").replace(/\D/g,""),photo,verified:false,published:"oggi"
       };
@@ -629,13 +714,91 @@
       const msg = qs("#request-success");
       if(msg){
         msg.classList.add("active");
-        msg.innerHTML = `<strong>Richiesta salvata nella demo.</strong><br>Il tuo profilo è ora visibile nella pagina <a href="studenti.html" style="text-decoration:underline">Studenti in cerca</a> su questo dispositivo.`;
+        msg.innerHTML = `<strong>Richiesta salvata.</strong><br>Il tuo profilo è ora visibile nella pagina <a href="studenti.html" style="text-decoration:underline">Studenti in cerca</a> su questo dispositivo.`;
         msg.scrollIntoView({behavior:"smooth",block:"center"});
       }
       form.reset();
+      syncLivingModel();
       photoPreview?.classList.remove("active");
       qs("#request-city")?.dispatchEvent(new Event("change"));
     });
+  }
+
+  function setupProtectedContacts(){
+    qsa("[data-protected-contact]").forEach(link => {
+      if(link.dataset.protectionBound === "true") return;
+      link.dataset.protectionBound = "true";
+      link.addEventListener("click", e => {
+        if(localStorage.getItem("studentbnb_user")) return;
+        e.preventDefault();
+        qs("#login-modal")?.classList.add("active");
+        toast("Accedi gratuitamente per utilizzare i contatti");
+      });
+    });
+  }
+
+  function setupAlerts(){
+    qsa("[data-save-alert]").forEach(button => button.addEventListener("click", () => {
+      if(!localStorage.getItem("studentbnb_user")){
+        qs("#login-modal")?.classList.add("active");
+        toast("Accedi per salvare la ricerca e ricevere gli avvisi");
+        return;
+      }
+      const alerts = JSON.parse(localStorage.getItem("studentbnb_alerts") || "[]");
+      const filters = Object.fromEntries(qsa(".filters input,.filters select").filter(field => field.id).map(field => [field.id,field.value]));
+      alerts.push({page:location.pathname,query:location.search,filters,created:new Date().toISOString()});
+      localStorage.setItem("studentbnb_alerts",JSON.stringify(alerts));
+      toast("Ricerca salvata. Gli avvisi sono attivi su questo dispositivo");
+    }));
+  }
+
+  function setupWizard(formSelector, progressSelector){
+    const form = qs(formSelector);
+    const progress = qs(progressSelector);
+    if(!form || !progress) return;
+    const sections = qsa(":scope > .form-section",form);
+    const steps = qsa(".progress-step",progress);
+    if(sections.length < 2) return;
+    let current = 0;
+    form.classList.add("wizard-ready");
+    sections.forEach((section,index) => {
+      if(index < sections.length - 1){
+        const controls = document.createElement("div");
+        controls.className = "wizard-controls";
+        controls.innerHTML = `${index ? `<button class="btn btn-white" type="button" data-wizard-back>← Indietro</button>` : "<span></span>"}<button class="btn btn-yellow" type="button" data-wizard-next>Continua →</button>`;
+        section.appendChild(controls);
+      } else {
+        const actions = qs(".form-actions",section);
+        if(actions && !qs("[data-wizard-back]",actions)){
+          const back = document.createElement("button");
+          back.type = "button";
+          back.className = "btn btn-white";
+          back.dataset.wizardBack = "";
+          back.textContent = "← Indietro";
+          actions.prepend(back);
+        }
+      }
+    });
+    const show = index => {
+      current = Math.max(0,Math.min(index,sections.length-1));
+      sections.forEach((section,i) => section.hidden = i !== current);
+      steps.forEach((step,i) => {
+        step.classList.toggle("active",i === current);
+        step.classList.toggle("completed",i < current);
+      });
+      progress.scrollIntoView({behavior:"smooth",block:"center"});
+    };
+    form.addEventListener("click",event => {
+      const next = event.target.closest("[data-wizard-next]");
+      const back = event.target.closest("[data-wizard-back]");
+      if(next){
+        const invalid = qsa("input,select,textarea",sections[current]).find(field => !field.checkValidity());
+        if(invalid){ invalid.reportValidity(); return; }
+        show(current+1);
+      }
+      if(back) show(current-1);
+    });
+    show(0);
   }
 
   function escapeHtml(value){
@@ -654,5 +817,9 @@
     setupStudentRequestForm();
     setupStudentRequestsPage();
     setupFavorites();
+    setupProtectedContacts();
+    setupAlerts();
+    setupWizard("#publish-form",".progress.five");
+    setupWizard("#student-request-form",".progress.three");
   });
 })();
