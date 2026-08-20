@@ -114,6 +114,52 @@
     });
   }
 
+  function setupPublishMenus(){
+    const closeMenus = except => {
+      qsa(".publish-menu.open").forEach(wrapper => {
+        if(wrapper === except) return;
+        wrapper.classList.remove("open");
+        const trigger = qs(".header-cta", wrapper);
+        const menu = qs(".publish-choice-menu", wrapper);
+        if(trigger) trigger.setAttribute("aria-expanded","false");
+        if(menu) menu.hidden = true;
+      });
+    };
+    qsa(".header-cta").forEach((trigger,index) => {
+      if(trigger.closest(".publish-menu")) return;
+      const wrapper = document.createElement("div");
+      wrapper.className = "publish-menu";
+      trigger.parentNode.insertBefore(wrapper,trigger);
+      wrapper.appendChild(trigger);
+      const menu = document.createElement("div");
+      const menuId = `publish-choice-menu-${index+1}`;
+      menu.id = menuId;
+      menu.className = "publish-choice-menu";
+      menu.hidden = true;
+      menu.innerHTML = `
+        <a href="cerco.html"><span class="choice-icon" aria-hidden="true">🏠</span><span><strong>Cerco casa</strong><small>Pubblica la tua richiesta e fatti contattare.</small></span><b aria-hidden="true">›</b></a>
+        <a href="pubblica.html"><span class="choice-icon" aria-hidden="true">👥</span><span><strong>Cerco inquilino</strong><small>Pubblica una stanza, un posto letto o un alloggio.</small></span><b aria-hidden="true">›</b></a>`;
+      wrapper.appendChild(menu);
+      trigger.setAttribute("aria-haspopup","true");
+      trigger.setAttribute("aria-controls",menuId);
+      trigger.setAttribute("aria-expanded","false");
+      trigger.addEventListener("click", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const willOpen = menu.hidden;
+        closeMenus(wrapper);
+        menu.hidden = !willOpen;
+        wrapper.classList.toggle("open",willOpen);
+        trigger.setAttribute("aria-expanded",String(willOpen));
+      });
+      menu.addEventListener("click",e => e.stopPropagation());
+    });
+    document.addEventListener("click",() => closeMenus());
+    document.addEventListener("keydown",e => {
+      if(e.key === "Escape") closeMenus();
+    });
+  }
+
   function setupFavorites(){
     qsa("[data-favorite]").forEach(btn => {
       const id = btn.getAttribute("data-favorite");
@@ -599,6 +645,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     setupCitySelectors();
     setupHeader();
+    setupPublishMenus();
     setupHome();
     setupCityPage();
     setupDetail();

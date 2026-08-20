@@ -10,6 +10,8 @@ Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - scheda annuncio completa e orientata alla trasparenza commerciale;
 - modulo di pubblicazione con scelta della città, costi, spese, deposito, durata e preavviso;
 - modulo “Cerco alloggio” con richiesta, budget, periodo e profilo studente;
+- menu “Pubblica annuncio gratis” con scelta tra “Cerco casa” e “Cerco inquilino”;
+- banner di pubblicazione con le due azioni separate e senza sovrapposizioni grafiche;
 - pagina “Studenti in cerca” consultabile da proprietari e coinquilini;
 - profilo della convivenza negli annunci: composizione, atmosfera, lingue, pulizie, ospiti e interessi;
 - scelta guidata del quartiere/zona in base alla città selezionata;
@@ -27,7 +29,8 @@ Venezia e Verona.
 COLLEGAMENTI EUROPEI NEL FOOTER
 StudentBnB Spagna, Portogallo, Francia, Polonia e Grecia. I collegamenti
 puntano ai rispettivi domini nazionali e saranno pienamente operativi quando
-i domini verranno registrati, configurati e pubblicati.
+i domini verranno registrati, configurati e pubblicati. Ogni Paese è
+accompagnato dalla propria bandiera.
 
 COME PUBBLICARLO SU GITHUB PAGES
 1. Aprire la repository StudentBnB.
