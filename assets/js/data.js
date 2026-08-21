@@ -186,3 +186,27 @@ window.STUDENTBNB_REQUESTS = [
     email:"sara.demo@example.it",phone:"347 3334455",whatsapp:"393473334455",verified:false,published:"2 giorni fa"
   }
 ];
+
+// Normalizzazione compatibile con il database europeo comune.
+// Mantiene i dati demo locali, ma usa gli stessi identificatori e campi del sito spagnolo.
+window.STUDENTBNB_CITIES = window.STUDENTBNB_CITIES.map(city => ({
+  ...city,
+  id: city.id || `city_it_${city.slug.replace(/-/g,"_")}`,
+  countryCode: "IT",
+  active: city.active !== false
+}));
+window.STUDENTBNB_DATA.cities = window.STUDENTBNB_CITIES.map(city => ({
+  ...city,
+  count: city.slug === "padova" ? 358 : 0,
+  live: true
+}));
+window.STUDENTBNB_DATA.listings = window.STUDENTBNB_DATA.listings.map(listing => {
+  const citySlug = listing.citySlug || listing.city || "padova";
+  const city = window.STUDENTBNB_CITIES.find(item => item.slug === citySlug) || window.STUDENTBNB_CITIES[0];
+  return {...listing, countryCode:"IT", cityId:city.id, citySlug:city.slug};
+});
+window.STUDENTBNB_REQUESTS = window.STUDENTBNB_REQUESTS.map(request => {
+  const citySlug = request.citySlug || String(request.city || "padova").toLowerCase().replace(/\s+/g,"-");
+  const city = window.STUDENTBNB_CITIES.find(item => item.slug === citySlug) || window.STUDENTBNB_CITIES[0];
+  return {...request, countryCode:"IT", cityId:city.id, citySlug:city.slug};
+});

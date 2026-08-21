@@ -1,22 +1,28 @@
 
 (() => {
   "use strict";
+  const CONFIG = window.STUDENTBNB_CONFIG || {countryCode:"IT",locale:"it-IT",currency:"EUR",defaultCity:"padova",cityPage:"padova.html",reportEmail:"segnalazioni@studentbnb.it"};
   const DATA = window.STUDENTBNB_DATA || {listings:[], cities:[]};
   const DEMO_REQUESTS = window.STUDENTBNB_REQUESTS || [];
-  const CITIES = window.STUDENTBNB_CITIES || DATA.cities || [];
+  const CITIES = (window.STUDENTBNB_CITIES || DATA.cities || []).map(city => ({
+    ...city,
+    id: city.id || `city_${String(CONFIG.countryCode).toLowerCase()}_${String(city.slug).replace(/-/g,"_")}`,
+    countryCode: city.countryCode || CONFIG.countryCode,
+    active: city.active !== false
+  }));
   const ZONES = window.STUDENTBNB_ZONES || {};
 
   const qs = (s, root=document) => root.querySelector(s);
   const qsa = (s, root=document) => [...root.querySelectorAll(s)];
-  const money = n => new Intl.NumberFormat("it-IT", {style:"currency", currency:"EUR", maximumFractionDigits:0}).format(Number(n)||0);
+  const money = n => new Intl.NumberFormat(CONFIG.locale || "it-IT", {style:"currency", currency:CONFIG.currency || "EUR", maximumFractionDigits:0}).format(Number(n)||0);
   const formatDate = (iso, fallback="Da concordare") => {
     if(!iso) return fallback;
     const date = new Date(`${iso}T12:00:00`);
-    return Number.isNaN(date.getTime()) ? fallback : new Intl.DateTimeFormat("it-IT", {day:"numeric",month:"long",year:"numeric"}).format(date);
+    return Number.isNaN(date.getTime()) ? fallback : new Intl.DateTimeFormat(CONFIG.locale || "it-IT", {day:"numeric",month:"long",year:"numeric"}).format(date);
   };
 
   function cityBySlug(slug){
-    return CITIES.find(city => city.slug === slug) || CITIES.find(city => city.slug === "padova") || {slug:"padova",name:"Padova"};
+    return CITIES.find(city => city.slug === slug) || CITIES.find(city => city.slug === CONFIG.defaultCity) || CITIES[0] || {slug:CONFIG.defaultCity,name:"Padova",id:"city_it_padova",countryCode:CONFIG.countryCode};
   }
 
   function citySlugFromValue(value){
@@ -25,7 +31,7 @@
   }
 
   function listingCitySlug(listing){
-    return citySlugFromValue(listing.city || "padova") || "padova";
+    return citySlugFromValue(listing.citySlug || listing.city || CONFIG.defaultCity) || CONFIG.defaultCity;
   }
 
   function cityOptions(selected=""){
@@ -35,7 +41,7 @@
   function setupCitySelectors(){
     const queryCity = citySlugFromValue(new URLSearchParams(location.search).get("city") || "");
     const configurations = [
-      ["#home-city", "", "padova"],
+      ["#home-city", "", CONFIG.defaultCity],
       ["#city", "Seleziona", queryCity],
       ["#request-city", "Seleziona", queryCity],
       ["#student-filter-city", "Tutte le città", ""]
@@ -193,9 +199,9 @@
       form.addEventListener("submit", e => {
         e.preventDefault();
         const fd = new FormData(form);
-        const city = citySlugFromValue(fd.get("city")) || "padova";
+        const city = citySlugFromValue(fd.get("city")) || CONFIG.defaultCity;
         const type = fd.get("type");
-        location.href = `padova.html?city=${encodeURIComponent(city)}&type=${encodeURIComponent(type || "")}`;
+        location.href = `${CONFIG.cityPage}?city=${encodeURIComponent(city)}&type=${encodeURIComponent(type || "")}`;
       });
     }
     qsa("[data-city-coming]").forEach(el => el.addEventListener("click", e => {
@@ -246,7 +252,7 @@
     const list = qs("#listing-results");
     if(!list) return;
     const params = new URLSearchParams(location.search);
-    const requestedCity = citySlugFromValue(params.get("city") || "padova");
+    const requestedCity = citySlugFromValue(params.get("city") || CONFIG.defaultCity);
     const city = cityBySlug(requestedCity);
     const citySlug = city.slug;
     const cityName = city.name;
@@ -323,7 +329,7 @@
     const detailCityLink = qs("#detail-city-link");
     if(detailCityLink){
       detailCityLink.textContent = listingCity.name;
-      detailCityLink.href = `padova.html?city=${encodeURIComponent(listingCity.slug)}`;
+      detailCityLink.href = `${CONFIG.cityPage}?city=${encodeURIComponent(listingCity.slug)}`;
     }
     const gallery = (l.gallery && l.gallery.length ? l.gallery : [l.image]).slice(0,4);
     while(gallery.length < 4) gallery.push(gallery[gallery.length-1] || "assets/img/alloggio-1.webp");
@@ -524,10 +530,11 @@
   }
 
   function formToListing(fd){
-    const id = `PD-DEMO-${Date.now().toString().slice(-6)}`;
+    const city = cityBySlug(citySlugFromValue(fd.get("city")));
+    const id = globalThis.crypto?.randomUUID?.() || `listing-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const included = fd.get("expensesIncluded") === "yes";
     return {
-      id, city:fd.get("city"), zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
+      id, countryCode:CONFIG.countryCode, cityId:city.id, citySlug:city.slug, city:city.slug, zone:fd.get("zone"), tag:fd.get("tag") || "nuovo annuncio", type:fd.get("type"),
       arrangement:fd.get("arrangement"), price:Number(fd.get("price")), expensesIncluded:included,
       expenses:included ? 0 : Number(fd.get("expenses")||0), availableISO:fd.get("available"), available:formatDate(fd.get("available"),"Da concordare"),
       university:fd.get("university") || "Università", universityMinutes:Number(fd.get("universityMinutes")||0),
@@ -698,8 +705,9 @@
       if(!form.reportValidity()) return;
       const fd = new FormData(form);
       const photo = await fileAsDataUrl(photoInput?.files?.[0]);
+      const requestCity = cityBySlug(citySlugFromValue(fd.get("city")));
       const r = {
-        id:`RQ-DEMO-${Date.now().toString().slice(-6)}`,name:fd.get("name"),age:fd.get("age"),city:cityBySlug(citySlugFromValue(fd.get("city"))).name,
+        id:(globalThis.crypto?.randomUUID?.() || `request-${Date.now()}-${Math.random().toString(16).slice(2)}`),countryCode:CONFIG.countryCode,cityId:requestCity.id,citySlug:requestCity.slug,name:fd.get("name"),age:fd.get("age"),city:requestCity.name,
         zones:[fd.get("zone"),fd.get("otherZones")].filter(Boolean).join(", "),type:fd.get("type"),budget:Number(fd.get("budget")),
         availableFromISO:fd.get("availableFrom"),availableToISO:fd.get("availableTo"),availableFrom:formatDate(fd.get("availableFrom"),"Da concordare"),availableTo:formatDate(fd.get("availableTo"),"Flessibile"),university:fd.get("university"),course:fd.get("course"),studyYear:fd.get("studyYear"),
         languages:(fd.get("languages")||"").split(",").map(x=>x.trim()).filter(Boolean),smoking:fd.get("smoking"),pets:fd.get("pets"),

@@ -1,5 +1,5 @@
-STUDENTBNB — PROPOSTA 1, VERSIONE MULTICITTÀ PUBBLICABILE
-================================================
+STUDENTBNB ITALIA — MULTICITTÀ, DB READY PER DATABASE EUROPEO COMUNE
+===================================================================
 
 Questo pacchetto ricostruisce il sito seguendo la Proposta 1:
 - header giallo e identità StudentBnB;
@@ -50,9 +50,12 @@ COME PUBBLICARLO SU GITHUB PAGES
 IMPORTANTE
 Il sito è pienamente navigabile e le funzioni della demo operano nel browser.
 Gli annunci pubblicati dal modulo vengono salvati nel localStorage e sono
-visibili sul medesimo dispositivo. Per una piattaforma reale condivisa da
-tutti gli utenti occorrono un backend, un database, verifica email,
-moderazione, gestione immagini e informativa privacy definitiva.
+visibili sul medesimo dispositivo. Il frontend italiano è ora allineato alla
+versione spagnola DB Ready v2: configurazione nazionale separata, countryCode
+IT, cityId stabili, UUID per annunci/richieste e contratto dati comune in
+database-contract.json. Le istruzioni di collegamento sono in
+SHARED_DATABASE.md. Per la piattaforma reale occorrono ancora API condivisa,
+verifica e-mail, moderazione, gestione immagini e informativa privacy definitiva.
 
 PAGINE
 - index.html: homepage Proposta 1
