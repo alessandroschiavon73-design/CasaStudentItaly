@@ -18,11 +18,11 @@ window.STUDENTBNB_CONFIG = Object.freeze({
 (function () {
   const cfg = window.STUDENTBNB_CONFIG;
   const sites = [
-    ["IT","Italia","🇮🇹","https://studentbnb.it/"],
-    ["ES","España","🇪🇸","https://studentbnb.es/"],
-    ["FR","France","🇫🇷","https://studentbnb.fr/"],
-    ["DE","Deutschland","🇩🇪","https://student-bnb.de/"],
-    ["PL","Polska","🇵🇱","https://studentbnb.pl/"]
+    ["IT","Italia","assets/img/flag-it.svg","https://studentbnb.it/"],
+    ["ES","España","assets/img/flag-es.svg","https://studentbnb.es/"],
+    ["FR","France","assets/img/flag-fr.svg","https://studentbnb.fr/"],
+    ["DE","Deutschland","assets/img/flag-de.svg","https://student-bnb.de/"],
+    ["PL","Polska","assets/img/flag-pl.svg","https://studentbnb.pl/"]
   ];
   const ogImage = `https://${cfg.domain}/assets/img/italia-proposta1.webp`;
 
@@ -102,7 +102,7 @@ window.STUDENTBNB_CONFIG = Object.freeze({
     const box = document.querySelector(".footer-international .footer-country-links");
     if (box) {
       box.innerHTML = sites.map(([code, label, flag, url]) =>
-        `<a href="${url}"${code === cfg.countryCode ? ' aria-current="page"' : ' target="_blank" rel="noopener"'}><span aria-hidden="true">${flag}</span> ${label}</a>`
+        `<a href="${url}"${code === cfg.countryCode ? ' aria-current="page"' : ' target="_blank" rel="noopener"'}><img class="network-flag" src="${flag}" alt="" width="30" height="20"><span>${label}</span><span class="network-open" aria-hidden="true">↗</span></a>`
       ).join("");
     }
   }
