@@ -20,6 +20,7 @@
     const date = new Date(`${iso}T12:00:00`);
     return Number.isNaN(date.getTime()) ? fallback : new Intl.DateTimeFormat(CONFIG.locale || "it-IT", {day:"numeric",month:"long",year:"numeric"}).format(date);
   };
+  const updateSeo = (title, description) => window.StudentBnBSEO?.update({title, description});
 
   function cityBySlug(slug){
     return CITIES.find(city => city.slug === slug) || CITIES.find(city => city.slug === CONFIG.defaultCity) || CITIES[0] || {slug:CONFIG.defaultCity,name:"Padova",id:"city_it_padova",countryCode:CONFIG.countryCode};
@@ -83,6 +84,15 @@
     requestAnimationFrame(() => el.classList.add("show"));
     clearTimeout(window.__toastTimer);
     window.__toastTimer = setTimeout(() => el.classList.remove("show"), 2500);
+  }
+
+  function setupDemoNotice(){
+    const map = qs(".map-stage");
+    if(!map || qs(".demo-map-notice", map)) return;
+    const notice = document.createElement("p");
+    notice.className = "demo-map-notice";
+    notice.textContent = "Anteprima dimostrativa: annunci, profili e quantità mostrate sono esempi.";
+    map.appendChild(notice);
   }
 
   function setupHeader(){
@@ -228,7 +238,7 @@
             <h3><a href="annuncio.html?id=${encodeURIComponent(l.id)}">${escapeHtml(l.zone)}</a></h3>
             <span class="pill">${escapeHtml(l.tag || "offerta trasparente")}</span>
           </div>
-          <div class="listing-meta"><span>♙ ${escapeHtml(l.type)}</span><span>${escapeHtml(l.arrangement || "")}</span>${l.verified ? `<span class="verification-badge">✓ Inserzionista verificato</span>` : ""}</div>
+          <div class="listing-meta"><span>♙ ${escapeHtml(l.type)}</span><span>${escapeHtml(l.arrangement || "")}</span>${l.isDemo ? `<span class="demo-badge">Esempio dimostrativo</span>` : l.verified ? `<span class="verification-badge">✓ Inserzionista verificato</span>` : ""}</div>
           ${l.intergenerational?.enabled ? `<span class="solidarity-badge">🤝 Ospitalità solidale</span>` : ""}
           <div class="listing-submeta">
             <span>Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || "da concordare"))}</span>
@@ -259,8 +269,10 @@
     const cityImageSlugs = new Set(["bologna","firenze","milano","napoli","padova","pisa","roma","torino"]);
     const heroImage = citySlug === "padova" ? "assets/img/padova-hero.webp" : cityImageSlugs.has(citySlug) ? `assets/img/citta-${citySlug}.webp` : "assets/img/italia-proposta1.webp";
     document.title = `Alloggi per studenti a ${cityName} | StudentBnB`;
+    const seoDescription = `Stanze, posti letto e appartamenti per studenti a ${cityName}, con costi, spese e condizioni confrontabili.`;
     const metaDescription = qs('meta[name="description"]');
-    if(metaDescription) metaDescription.content = `Stanze, posti letto e appartamenti per studenti a ${cityName}, con costi, spese e condizioni confrontabili.`;
+    if(metaDescription) metaDescription.content = seoDescription;
+    updateSeo(document.title, seoDescription);
     if(qs("#city-breadcrumb")) qs("#city-breadcrumb").textContent = cityName;
     if(qs("#city-name")) qs("#city-name").textContent = cityName;
     if(qs("#city-description")) qs("#city-description").textContent = `Scopri gli alloggi nelle zone universitarie di ${cityName}. Ogni offerta evidenzia costi, spese e condizioni contrattuali.`;
@@ -325,7 +337,10 @@
     const id = new URLSearchParams(location.search).get("id") || DATA.listings[0]?.id;
     const l = getListingById(id);
     const listingCity = cityBySlug(listingCitySlug(l));
+    const robots = qs('meta[name="robots"]');
+    if(robots && l.isDemo) robots.content = "noindex,follow";
     document.title = `${l.type} in ${l.zone}, ${listingCity.name} | StudentBnB`;
+    updateSeo(document.title, `${l.type} in ${l.zone}, ${listingCity.name}: canone, spese, disponibilità e condizioni dell’alloggio.`);
     const detailCityLink = qs("#detail-city-link");
     if(detailCityLink){
       detailCityLink.textContent = listingCity.name;
@@ -352,11 +367,16 @@
     const expenseText = l.expensesIncluded ? "Spese incluse" : `Spese escluse${l.expenses ? `: circa ${money(l.expenses)}/mese` : ""}`;
     const agency = l.publisher === "Agenzia" ? `<dt>Costo agenzia</dt><dd>${escapeHtml(l.agencyFee || "Da dichiarare")}</dd>` : "";
     const household = householdTemplate(l);
+    const contactActions = l.isDemo ? `
+      <div class="demo-contact-box"><strong>Annuncio di esempio</strong><span>I contatti non sono attivi perché questo contenuto serve a mostrare il funzionamento della piattaforma.</span></div>` : `
+      ${wa ? `<a class="btn btn-green btn-block" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno, vi contatto per l’annuncio StudentBnB "+l.id)}" target="_blank" rel="noopener">◉ Contatta su WhatsApp</a>` : ""}
+      <a class="btn btn-blue btn-block" data-protected-contact href="mailto:${email}?subject=${encodeURIComponent("Richiesta informazioni annuncio "+l.id)}">✉ Invia un’email</a>
+      ${phone ? `<a class="btn btn-white btn-block" data-protected-contact href="tel:${phone}">☎ Chiama: ${escapeHtml(l.phone)}</a>` : ""}`;
     return `
       <div class="detail-title-row">
         <div>
           <h1>${escapeHtml(l.type)} in ${escapeHtml(l.zone)} <span class="pill">${escapeHtml(l.tag || "")}</span></h1>
-          <div class="top-meta"><span>♙ ${escapeHtml(l.type)}</span><span>⌂ ${escapeHtml(l.arrangement || "")}</span><span>▣ Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || ""))}</span>${l.verified ? `<span class="verification-badge">✓ Inserzionista verificato</span>` : ""}</div>
+          <div class="top-meta"><span>♙ ${escapeHtml(l.type)}</span><span>⌂ ${escapeHtml(l.arrangement || "")}</span><span>▣ Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || ""))}</span>${l.isDemo ? `<span class="demo-badge">Esempio dimostrativo</span>` : l.verified ? `<span class="verification-badge">✓ Inserzionista verificato</span>` : ""}</div>
           ${l.intergenerational?.enabled ? `<span class="solidarity-badge">🤝 Ospitalità solidale intergenerazionale</span>` : ""}
         </div>
         <div class="detail-price"><div class="price">${money(l.price)}<small>/mese</small></div><span class="expenses-badge ${l.expensesIncluded?"included":"excluded"}">${expenseText}</span></div>
@@ -374,11 +394,9 @@
           <h2>Contatta ${l.publisher === "Agenzia" ? "l’agenzia" : "l’inserzionista"}</h2>
           <p>Fai domande sui costi, sul contratto e sulla disponibilità prima di fissare la visita.</p>
           <div class="contact-stack">
-            ${wa ? `<a class="btn btn-green btn-block" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno, vi contatto per l’annuncio StudentBnB "+l.id)}" target="_blank" rel="noopener">◉ Contatta su WhatsApp</a>` : ""}
-            <a class="btn btn-blue btn-block" data-protected-contact href="mailto:${email}?subject=${encodeURIComponent("Richiesta informazioni annuncio "+l.id)}">✉ Invia un’email</a>
-            ${phone ? `<a class="btn btn-white btn-block" data-protected-contact href="tel:${phone}">☎ Chiama: ${escapeHtml(l.phone)}</a>` : ""}
+            ${contactActions}
           </div>
-          <p class="micro-note">I contatti sono protetti: accedi gratuitamente per utilizzarli.</p>
+          ${l.isDemo ? "" : `<p class="micro-note">I contatti sono protetti: accedi gratuitamente per utilizzarli.</p>`}
           <div class="safety-box"><strong>Affitta in sicurezza</strong><br>Non inviare denaro prima di aver verificato l’alloggio, il contratto e l’identità dell’inserzionista.</div>
         </aside>
       </div>
@@ -432,7 +450,7 @@
 
       <div class="detail-footer-grid">
         <section class="info-card"><h2>▣ Disponibilità</h2><strong>Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || ""))}</strong><br><span>Permanenza minima: ${escapeHtml(l.minimumStay || "da concordare")}</span><br><span>Preavviso: ${escapeHtml(l.notice || "da concordare")}</span></section>
-        <section class="info-card"><h2>◎ Chi pubblica</h2><strong>${escapeHtml(l.publisher || "Privato")}</strong>${l.verified ? `<br><span class="verification-badge">✓ Email verificata</span>` : ""}<br><span>Annuncio pubblicato il ${escapeHtml(l.published || "oggi")}</span><br><span>Ultimo aggiornamento: ${escapeHtml(l.updated || "oggi")}</span></section>
+        <section class="info-card"><h2>◎ Chi pubblica</h2>${l.isDemo ? `<strong>Profilo dimostrativo</strong><br><span>Dati e date non rappresentano un’offerta reale.</span>` : `<strong>${escapeHtml(l.publisher || "Privato")}</strong>${l.verified ? `<br><span class="verification-badge">✓ Email verificata</span>` : ""}<br><span>Annuncio pubblicato il ${escapeHtml(l.published || "oggi")}</span><br><span>Ultimo aggiornamento: ${escapeHtml(l.updated || "oggi")}</span>`}</section>
         <section class="info-card"><h2>◇ ID annuncio</h2><strong>#${escapeHtml(l.id)}</strong><br><a href="mailto:segnalazioni@studentbnb.it?subject=${encodeURIComponent("Segnalazione annuncio "+l.id)}" style="color:#1565a8;text-decoration:underline">Segnala annuncio</a></section>
       </div>`;
   }
@@ -598,7 +616,7 @@
             <div><h2>${escapeHtml(r.name)}${r.age ? `, ${escapeHtml(r.age)}` : ""}</h2><div class="request-subtitle">${escapeHtml(r.course || "Studente")} · ${escapeHtml(r.university || r.city)}</div></div>
             <div class="request-budget">${money(r.budget)}<small>/mese max</small></div>
           </div>
-          ${r.verified ? `<div class="verification-badge">✓ Profilo studente verificato</div>` : `<div class="request-subtitle">Profilo non ancora verificato</div>`}
+          ${r.isDemo ? `<div class="demo-badge">Profilo dimostrativo</div>` : r.verified ? `<div class="verification-badge">✓ Profilo studente verificato</div>` : `<div class="request-subtitle">Profilo non ancora verificato</div>`}
           ${r.livingModel === "intergenerational" ? `<div class="solidarity-badge">🤝 Disponibile all’ospitalità solidale</div>` : ""}
           <div class="profile-chips">${languages}${interests}</div>
           <p class="request-summary">${escapeHtml(r.bio || "")}</p>
@@ -613,9 +631,10 @@
           </div>
         </div>
         <div class="request-card-actions">
-          ${wa ? `<a class="btn btn-green" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno "+r.name+", ti contatto per la tua richiesta su StudentBnB "+r.id)}" target="_blank" rel="noopener">◉ WhatsApp</a>` : ""}
-          ${r.email ? `<a class="btn btn-blue" data-protected-contact href="mailto:${escapeHtml(r.email)}?subject=${encodeURIComponent("Proposta alloggio StudentBnB "+r.id)}">✉ Email</a>` : ""}
-          ${phone ? `<a class="btn btn-white" data-protected-contact href="tel:${escapeHtml(phone)}">☎ Chiama</a>` : ""}
+          ${r.isDemo ? `<span class="demo-contact-inline">Contatti non attivi per i profili di esempio.</span>` : `
+            ${wa ? `<a class="btn btn-green" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno "+r.name+", ti contatto per la tua richiesta su StudentBnB "+r.id)}" target="_blank" rel="noopener">◉ WhatsApp</a>` : ""}
+            ${r.email ? `<a class="btn btn-blue" data-protected-contact href="mailto:${escapeHtml(r.email)}?subject=${encodeURIComponent("Proposta alloggio StudentBnB "+r.id)}">✉ Email</a>` : ""}
+            ${phone ? `<a class="btn btn-white" data-protected-contact href="tel:${escapeHtml(phone)}">☎ Chiama</a>` : ""}`}
         </div>
       </article>`;
   }
@@ -818,6 +837,7 @@
     setupHeader();
     setupPublishMenus();
     setupHome();
+    setupDemoNotice();
     setupCityPage();
     setupDetail();
     setupPublish();

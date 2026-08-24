@@ -1,4 +1,4 @@
--- StudentBnB EU core seed: six markets + 82 university cities
+-- StudentBnB core seed: five active markets + Portugal reserved and inactive
 begin;
 insert into public.countries(code,name,locale,currency,domain,active) values
 ('IT','Italia','it-IT','EUR','studentbnb.it',true),
@@ -6,8 +6,8 @@ insert into public.countries(code,name,locale,currency,domain,active) values
 ('FR','France','fr-FR','EUR','studentbnb.fr',true),
 ('DE','Deutschland','de-DE','EUR','student-bnb.de',true),
 ('PL','Polska','pl-PL','PLN','studentbnb.pl',true),
-('PT','Portugal','pt-PT','EUR','studentbnb.pt',true)
-on conflict (code) do update set name=excluded.name,locale=excluded.locale,currency=excluded.currency,domain=excluded.domain,active=true;
+('PT','Portugal','pt-PT','EUR','studentbnb-pt.invalid',false)
+on conflict (code) do update set name=excluded.name,locale=excluded.locale,currency=excluded.currency,domain=excluded.domain,active=excluded.active;
 
 insert into public.cities(country_code,slug,name,region,hero_image_url,active) values
 ('IT','padova','Padova',NULL,NULL,true),
@@ -84,13 +84,13 @@ insert into public.cities(country_code,slug,name,region,hero_image_url,active) v
 ('PL','lodz','Łódź','Łódzkie','assets/img/room-6.webp',true),
 ('PL','lublin','Lublin','Lubelskie','assets/img/room-7.webp',true),
 ('PL','katowice','Katowice','Śląskie','assets/img/room-1.webp',true),
-('PT','lisboa','Lisboa','Área Metropolitana de Lisboa','assets/img/room-1.webp',true),
-('PT','porto','Porto','Área Metropolitana do Porto','assets/img/room-2.webp',true),
-('PT','coimbra','Coimbra','Região de Coimbra','assets/img/room-3.webp',true),
-('PT','braga','Braga','Cávado','assets/img/room-4.webp',true),
-('PT','aveiro','Aveiro','Região de Aveiro','assets/img/room-5.webp',true),
-('PT','faro','Faro','Algarve','assets/img/room-6.webp',true),
-('PT','evora','Évora','Alentejo Central','assets/img/room-7.webp',true),
-('PT','covilha','Covilhã','Beiras e Serra da Estrela','assets/img/room-1.webp',true)
-on conflict (country_code,slug) do update set name=excluded.name,region=excluded.region,hero_image_url=excluded.hero_image_url,active=true;
+('PT','lisboa','Lisboa','Área Metropolitana de Lisboa','assets/img/room-1.webp',false),
+('PT','porto','Porto','Área Metropolitana do Porto','assets/img/room-2.webp',false),
+('PT','coimbra','Coimbra','Região de Coimbra','assets/img/room-3.webp',false),
+('PT','braga','Braga','Cávado','assets/img/room-4.webp',false),
+('PT','aveiro','Aveiro','Região de Aveiro','assets/img/room-5.webp',false),
+('PT','faro','Faro','Algarve','assets/img/room-6.webp',false),
+('PT','evora','Évora','Alentejo Central','assets/img/room-7.webp',false),
+('PT','covilha','Covilhã','Beiras e Serra da Estrela','assets/img/room-1.webp',false)
+on conflict (country_code,slug) do update set name=excluded.name,region=excluded.region,hero_image_url=excluded.hero_image_url,active=excluded.active;
 commit;
