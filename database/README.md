@@ -3,15 +3,17 @@
 This directory is the single database definition for the European StudentBnB network.
 
 ## Scope
-Markets currently seeded:
+Active markets currently seeded:
 - IT — studentbnb.it
 - ES — studentbnb.es
 - FR — studentbnb.fr
 - DE — student-bnb.de
 - PL — studentbnb.pl
-- PT — studentbnb.pt
 
-The core seed contains 82 university cities already present in the current country frontends. District/neighbourhood data remains in each country frontend snapshot and can be imported in a second migration without changing the schema.
+Reserved but inactive:
+- PT — Portugal (domain and launch intentionally pending)
+
+The core seed contains the university cities already present in the country frontends. Portuguese records remain inactive and are excluded from public queries until a future domain and launch decision. District/neighbourhood data remains in each active country frontend snapshot and can be imported in a second migration without changing the schema.
 
 ## Recommended runtime
 Supabase (PostgreSQL) is the recommended first deployment because it provides:
@@ -43,6 +45,6 @@ Listings and student requests:
 `draft → email_pending → pending_review → published → suspended/expired`
 
 ## Next migration
-Import the existing district snapshots from the country packages. Germany currently contains 1,531 named subdivisions and Poland 1,693, together with the current Italy, Spain, France and Portugal snapshots.
+Import the existing district snapshots from the five active country packages. Germany currently contains 1,531 named subdivisions and Poland 1,693, together with the current Italy, Spain and France snapshots.
 
 This can be done without schema changes because `districts(city_id, slug, name)` is already defined.

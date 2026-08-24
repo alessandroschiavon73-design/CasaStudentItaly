@@ -203,10 +203,10 @@ window.STUDENTBNB_DATA.cities = window.STUDENTBNB_CITIES.map(city => ({
 window.STUDENTBNB_DATA.listings = window.STUDENTBNB_DATA.listings.map(listing => {
   const citySlug = listing.citySlug || listing.city || "padova";
   const city = window.STUDENTBNB_CITIES.find(item => item.slug === citySlug) || window.STUDENTBNB_CITIES[0];
-  return {...listing, countryCode:"IT", cityId:city.id, citySlug:city.slug};
+  return {...listing, countryCode:"IT", cityId:city.id, citySlug:city.slug, isDemo:true};
 });
 window.STUDENTBNB_REQUESTS = window.STUDENTBNB_REQUESTS.map(request => {
   const citySlug = request.citySlug || String(request.city || "padova").toLowerCase().replace(/\s+/g,"-");
   const city = window.STUDENTBNB_CITIES.find(item => item.slug === citySlug) || window.STUDENTBNB_CITIES[0];
-  return {...request, countryCode:"IT", cityId:city.id, citySlug:city.slug};
+  return {...request, countryCode:"IT", cityId:city.id, citySlug:city.slug, isDemo:true};
 });

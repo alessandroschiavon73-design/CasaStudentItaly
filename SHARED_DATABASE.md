@@ -30,3 +30,7 @@ La modalità predefinita resta `demo`, quindi il sito può essere aperto e verif
 5. Disattivare il fallback `localStorage` dopo il collaudo delle operazioni CRUD.
 
 Il database deve restare unico, mentre ogni query e record deve essere filtrato per `countryCode` e `cityId`.
+
+## Perimetro attivo
+
+Il backend comune è predisposto per Italia, Spagna, Francia, Germania e Polonia. Il Portogallo resta registrato solo come mercato inattivo e non deve essere esposto nelle API pubbliche, nei selettori o nei collegamenti tra siti. Non viene usato un dominio `.eu`.
