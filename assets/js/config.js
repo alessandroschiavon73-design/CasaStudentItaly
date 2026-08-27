@@ -18,12 +18,12 @@ window.STUDENTBNB_CONFIG = Object.freeze({
 (function () {
   const cfg = window.STUDENTBNB_CONFIG;
   const sites = [
-    ["EU","Europe","assets/img/flag-eu.svg","https://casastudent.eu/"],
-    ["IT","Italia","assets/img/flag-it.svg","https://casastudent.it/"],
-    ["ES","España","assets/img/flag-es.svg","https://casastudent.es/"],
-    ["FR","France","assets/img/flag-fr.svg","https://casastudent.fr/"],
-    ["DE","Deutschland","assets/img/flag-de.svg","https://casastudent.de/"],
-    ["PL","Polska","assets/img/flag-pl.svg","https://casastudent.pl/"]
+    ["EU","Europe","assets/img/flag-eu.svg","https://www.casastudent.eu/"],
+    ["IT","Italia","assets/img/flag-it.svg","https://www.casastudent.it/"],
+    ["ES","España","assets/img/flag-es.svg","https://www.casastudent.es/"],
+    ["FR","France","assets/img/flag-fr.svg","https://www.casastudent.fr/"],
+    ["DE","Deutschland","assets/img/flag-de.svg","https://www.casastudent.de/"],
+    ["PL","Polska","assets/img/flag-pl.svg","https://www.casastudent.pl/"]
   ];
   const ogImage = `https://${cfg.domain}/assets/img/italia-proposta1.webp`;
   function upsertMeta(key, value, content) { let element = document.head.querySelector(`meta[${key}="${value}"]`); if (!element) { element = document.createElement("meta"); element.setAttribute(key, value); document.head.appendChild(element); } element.setAttribute("content", content); }
