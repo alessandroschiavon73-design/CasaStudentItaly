@@ -9,10 +9,12 @@ window.STUDENTBNB_CONFIG = Object.freeze({
   defaultCity: "padova",
   cityPage: "padova.html",
   reportEmail: "segnalazioni@studentbnb.it",
-  apiMode: "demo",
+  apiMode: "supabase",
   apiBase: "/api/v1",
+  supabaseUrl: "https://etyvaugscofodkhklqqz.supabase.co",
+  supabasePublishableKey: "sb_publishable_MJiby1pof0ghYnw1UMx-jQ_bpQKyd0L",
   unifiedDatabase: true,
-  schemaVersion: "1.2"
+  schemaVersion: "1.3"
 });
 
 (function () {
@@ -45,3 +47,4 @@ window.STUDENTBNB_CONFIG = Object.freeze({
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply); else apply();
 })();
 (function(){if(document.querySelector('script[data-studentbnb-analytics]'))return;const s=document.createElement('script');s.src='assets/js/analytics.js?v=20260824';s.defer=true;s.dataset.studentbnbAnalytics='1';document.head.appendChild(s)})();
+(function(){if(document.querySelector('script[data-casastudent-supabase]'))return;const s=document.createElement('script');s.src='assets/js/supabase-integration.js?v=20260827';s.defer=true;s.dataset.casastudentSupabase='1';document.head.appendChild(s)})();
