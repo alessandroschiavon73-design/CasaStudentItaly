@@ -10,7 +10,7 @@
   const FAVORITES_KEY = "studentbnb_favorites";
   const SYNCED_LISTINGS_KEY = "casastudent_synced_listing_ids";
   const SYNCED_REQUESTS_KEY = "casastudent_synced_request_ids";
-  const SDK_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js";
+  const SDK_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
   let client = null;
   let session = null;
@@ -187,6 +187,21 @@
     return obj?.[key] || obj?.contact?.[key] || obj?.contacts?.[key] || null;
   }
 
+  function publicLegacyPayload(obj) {
+    const copy = { ...(obj || {}) };
+    delete copy.email;
+    delete copy.phone;
+    delete copy.whatsapp;
+    delete copy.telegram;
+    delete copy.contact;
+    delete copy.contacts;
+    delete copy.contactEmail;
+    delete copy.contactPhone;
+    delete copy.contactWhatsapp;
+    delete copy.contactTelegram;
+    return copy;
+  }
+
   function mapRemoteListing(row) {
     const legacy = parseLegacyDescription(row.description);
     const city = cityMap.get(row.city_id);
@@ -206,6 +221,10 @@
       availableISO: row.available_from || legacy.availableISO || "",
       image: legacy.image || "assets/img/alloggio-1.webp",
       gallery: Array.isArray(legacy.gallery) && legacy.gallery.length ? legacy.gallery : ["assets/img/camera.webp","assets/img/cucina.webp","assets/img/bagno.webp","assets/img/corridoio.webp"],
+      email: row.contact_email || legacy.email || "",
+      phone: row.contact_phone || legacy.phone || "",
+      whatsapp: row.contact_whatsapp || legacy.whatsapp || "",
+      telegram: row.contact_telegram || legacy.telegram || "",
       verified: false,
       isDemo: false,
       _remote: true
@@ -229,6 +248,7 @@
       email: row.contact_email || legacy.email || "",
       phone: row.contact_phone || legacy.phone || "",
       whatsapp: row.contact_whatsapp || legacy.whatsapp || "",
+      telegram: row.contact_telegram || legacy.telegram || "",
       verified: false,
       _remote: true
     };
@@ -238,9 +258,11 @@
     if (!client) return;
     if (!cityMap.size) await loadCities();
 
+    const listingSource = session?.user ? "listings" : "public_listings";
+    const requestSource = session?.user ? "student_requests" : "public_student_requests";
     const [listingsResult, requestsResult] = await Promise.all([
-      client.from("listings").select("*").eq("country_code", COUNTRY).eq("status", "published").order("created_at", { ascending: false }),
-      client.from("student_requests").select("*").eq("country_code", COUNTRY).eq("status", "published").order("created_at", { ascending: false })
+      client.from(listingSource).select("*").eq("country_code", COUNTRY).eq("status", "published").order("created_at", { ascending: false }),
+      client.from(requestSource).select("*").eq("country_code", COUNTRY).eq("status", "published").order("created_at", { ascending: false })
     ]);
     if (listingsResult.error) throw listingsResult.error;
     if (requestsResult.error) throw requestsResult.error;
@@ -283,7 +305,7 @@
         district_id: null,
         publisher_user_id: session.user.id,
         title: local.title || [local.type, local.zone, city.name].filter(Boolean).join(" · "),
-        description: JSON.stringify({ casastudentLegacy: 1, payload: local }),
+        description: JSON.stringify({ casastudentLegacy: 1, payload: publicLegacyPayload(local) }),
         listing_type: listingTypeToDb(local.type),
         arrangement: local.arrangement || null,
         price: Number(local.price || 0),
@@ -339,7 +361,7 @@
         district_id: null,
         user_id: session.user.id,
         title: local.title || `${local.name || "Studente"} cerca ${local.type || "alloggio"} a ${city.name}`,
-        description: JSON.stringify({ casastudentLegacy: 1, payload: local }),
+        description: JSON.stringify({ casastudentLegacy: 1, payload: publicLegacyPayload(local) }),
         accommodation_type: local.type || null,
         budget_max: Number(local.budget || 0),
         currency: CONFIG.currency || "EUR",
