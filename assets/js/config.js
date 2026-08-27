@@ -9,10 +9,12 @@ window.STUDENTBNB_CONFIG = Object.freeze({
   defaultCity: "padova",
   cityPage: "padova.html",
   reportEmail: "segnalazioni@studentbnb.it",
-  apiMode: "demo",
+  apiMode: "supabase",
   apiBase: "/api/v1",
   unifiedDatabase: true,
-  schemaVersion: "1.2"
+  schemaVersion: "1.2",
+  supabaseUrl: "https://etyvaugscofodkhklqqz.supabase.co",
+  supabasePublishableKey: "sb_publishable_MJiby1pof0ghYnw1UMx-jQ_bpQKyd0L"
 });
 
 (function () {
@@ -26,8 +28,8 @@ window.STUDENTBNB_CONFIG = Object.freeze({
     ["PL","Polska","assets/img/flag-pl.svg","https://www.casastudent.pl/"]
   ];
   const ogImage = `https://${cfg.domain}/assets/img/italia-proposta1.webp`;
-  function upsertMeta(key, value, content) { let element = document.head.querySelector(`meta[${key}="${value}"]`); if (!element) { element = document.createElement("meta"); element.setAttribute(key, value); document.head.appendChild(element); } element.setAttribute("content", content); }
-  function upsertLink(rel, href, hreflang) { const selector = `link[rel="${rel}"]${hreflang ? `[hreflang="${hreflang}"]` : ""}`; let element = document.head.querySelector(selector); if (!element) { element = document.createElement("link"); element.rel = rel; if (hreflang) element.hreflang = hreflang; document.head.appendChild(element); } element.href = href; }
+  function upsertMeta(key, value, content) { let element = document.head.querySelector(`meta[${key}=\"${value}\"]`); if (!element) { element = document.createElement("meta"); element.setAttribute(key, value); document.head.appendChild(element); } element.setAttribute("content", content); }
+  function upsertLink(rel, href, hreflang) { const selector = `link[rel=\"${rel}\"]${hreflang ? `[hreflang=\"${hreflang}\"]` : ""}`; let element = document.head.querySelector(selector); if (!element) { element = document.createElement("link"); element.rel = rel; if (hreflang) element.hreflang = hreflang; document.head.appendChild(element); } element.href = href; }
   function canonicalUrl() { const page = location.pathname.endsWith("/") ? "" : location.pathname.split("/").pop(); const params = new URLSearchParams(location.search); const canonicalParams = new URLSearchParams(); if (page === cfg.cityPage && params.get("city")) canonicalParams.set("city", params.get("city")); if (page === "annuncio.html" && params.get("id")) canonicalParams.set("id", params.get("id")); const query = canonicalParams.toString(); return `https://${cfg.domain}/${page || ""}${query ? `?${query}` : ""}`; }
   function updateSeo({title = document.title, description} = {}) { const desc = description || document.head.querySelector('meta[name="description"]')?.content || "Alloggi per studenti in Italia."; const canonical = canonicalUrl(); upsertLink("canonical", canonical); upsertMeta("property", "og:title", title); upsertMeta("property", "og:description", desc); upsertMeta("property", "og:url", canonical); upsertMeta("property", "og:image", ogImage); upsertMeta("name", "twitter:title", title); upsertMeta("name", "twitter:description", desc); upsertMeta("name", "twitter:image", ogImage); }
   function addStructuredData() { let script = document.head.querySelector("#studentbnb-website-schema"); if (!script) { script = document.createElement("script"); script.id = "studentbnb-website-schema"; script.type = "application/ld+json"; document.head.appendChild(script); } script.textContent = JSON.stringify({"@context":"https://schema.org","@type":"WebSite",name:"CasaStudent",url:`https://${cfg.domain}/`,inLanguage:cfg.locale}); }
