@@ -9,12 +9,10 @@ window.STUDENTBNB_CONFIG = Object.freeze({
   defaultCity: "padova",
   cityPage: "padova.html",
   reportEmail: "segnalazioni@studentbnb.it",
-  apiMode: "supabase",
+  apiMode: "demo",
   apiBase: "/api/v1",
   unifiedDatabase: true,
-  schemaVersion: "1.2",
-  supabaseUrl: "https://etyvaugscofodkhklqqz.supabase.co",
-  supabasePublishableKey: "sb_publishable_MJiby1pof0ghYnw1UMx-jQ_bpQKyd0L"
+  schemaVersion: "1.2"
 });
 
 (function () {
