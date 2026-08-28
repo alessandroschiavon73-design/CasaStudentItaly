@@ -4,7 +4,7 @@ Il frontend italiano usa lo stesso contratto dati della versione spagnola DB Rea
 
 ## Identità del frontend
 
-- dominio: `studentbnb.it`
+- dominio: `casastudent.it`
 - `countryCode`: `IT`
 - locale: `it-IT`
 - valuta: `EUR`

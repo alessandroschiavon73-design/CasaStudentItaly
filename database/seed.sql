@@ -1,12 +1,12 @@
 -- StudentBnB core seed: five active markets + Portugal reserved and inactive
 begin;
 insert into public.countries(code,name,locale,currency,domain,active) values
-('IT','Italia','it-IT','EUR','studentbnb.it',true),
-('ES','España','es-ES','EUR','studentbnb.es',true),
-('FR','France','fr-FR','EUR','studentbnb.fr',true),
-('DE','Deutschland','de-DE','EUR','student-bnb.de',true),
-('PL','Polska','pl-PL','PLN','studentbnb.pl',true),
-('PT','Portugal','pt-PT','EUR','studentbnb-pt.invalid',false)
+('IT','Italia','it-IT','EUR','casastudent.it',true),
+('ES','España','es-ES','EUR','casastudent.es',true),
+('FR','France','fr-FR','EUR','casastudent.fr',true),
+('DE','Deutschland','de-DE','EUR','casastudent.de',true),
+('PL','Polska','pl-PL','PLN','casastudent.pl',true),
+('PT','Portugal','pt-PT','EUR','casastudent.pt',false)
 on conflict (code) do update set name=excluded.name,locale=excluded.locale,currency=excluded.currency,domain=excluded.domain,active=excluded.active;
 
 insert into public.cities(country_code,slug,name,region,hero_image_url,active) values

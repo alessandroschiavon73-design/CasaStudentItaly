@@ -4,11 +4,11 @@ This directory is the single database definition for the European StudentBnB net
 
 ## Scope
 Active markets currently seeded:
-- IT — studentbnb.it
-- ES — studentbnb.es
-- FR — studentbnb.fr
-- DE — student-bnb.de
-- PL — studentbnb.pl
+- IT — casastudent.it
+- ES — casastudent.es
+- FR — casastudent.fr
+- DE — casastudent.de
+- PL — casastudent.pl
 
 Reserved but inactive:
 - PT — Portugal (domain and launch intentionally pending)

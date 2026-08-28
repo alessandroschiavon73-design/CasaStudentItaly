@@ -1,7 +1,7 @@
 
 (() => {
   "use strict";
-  const CONFIG = window.STUDENTBNB_CONFIG || {countryCode:"IT",locale:"it-IT",currency:"EUR",defaultCity:"padova",cityPage:"padova.html",reportEmail:"segnalazioni@studentbnb.it"};
+  const CONFIG = window.STUDENTBNB_CONFIG || {countryCode:"IT",locale:"it-IT",currency:"EUR",defaultCity:"padova",cityPage:"padova.html",reportEmail:"segnalazioni@casastudent.it"};
   const DATA = window.STUDENTBNB_DATA || {listings:[], cities:[]};
   const DEMO_REQUESTS = window.STUDENTBNB_REQUESTS || [];
   const CITIES = (window.STUDENTBNB_CITIES || DATA.cities || []).map(city => ({
@@ -220,7 +220,7 @@
     }));
     qsa("[data-country-coming]").forEach(el => el.addEventListener("click", e => {
       e.preventDefault();
-      toast(`StudentBnB ${el.getAttribute("data-country-coming")} sarà disponibile prossimamente.`);
+      toast(`CasaStudent ${el.getAttribute("data-country-coming")} sarà disponibile prossimamente.`);
     }));
   }
 
@@ -268,7 +268,7 @@
     const cityName = city.name;
     const cityImageSlugs = new Set(["bologna","firenze","milano","napoli","padova","pisa","roma","torino"]);
     const heroImage = citySlug === "padova" ? "assets/img/padova-hero.webp" : cityImageSlugs.has(citySlug) ? `assets/img/citta-${citySlug}.webp` : "assets/img/italia-proposta1.webp";
-    document.title = `Alloggi per studenti a ${cityName} | StudentBnB`;
+    document.title = `Alloggi per studenti a ${cityName} | CasaStudent`;
     const seoDescription = `Stanze, posti letto e appartamenti per studenti a ${cityName}, con costi, spese e condizioni confrontabili.`;
     const metaDescription = qs('meta[name="description"]');
     if(metaDescription) metaDescription.content = seoDescription;
@@ -339,7 +339,7 @@
     const listingCity = cityBySlug(listingCitySlug(l));
     const robots = qs('meta[name="robots"]');
     if(robots && l.isDemo) robots.content = "noindex,follow";
-    document.title = `${l.type} in ${l.zone}, ${listingCity.name} | StudentBnB`;
+    document.title = `${l.type} in ${l.zone}, ${listingCity.name} | CasaStudent`;
     updateSeo(document.title, `${l.type} in ${l.zone}, ${listingCity.name}: canone, spese, disponibilità e condizioni dell’alloggio.`);
     const detailCityLink = qs("#detail-city-link");
     if(detailCityLink){
@@ -361,7 +361,7 @@
     const billList = (l.bills || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     const rules = (l.rules || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
     const nearby = (l.nearby || []).map(x=>`<li>${escapeHtml(x)}</li>`).join("");
-    const email = encodeURIComponent(l.email || "info@studentbnb.it");
+    const email = encodeURIComponent(l.email || "info@casastudent.it");
     const wa = (l.whatsapp || "").replace(/\D/g,"");
     const phone = (l.phone || "").replace(/\s/g,"");
     const expenseText = l.expensesIncluded ? "Spese incluse" : `Spese escluse${l.expenses ? `: circa ${money(l.expenses)}/mese` : ""}`;
@@ -369,7 +369,7 @@
     const household = householdTemplate(l);
     const contactActions = l.isDemo ? `
       <div class="demo-contact-box"><strong>Annuncio di esempio</strong><span>I contatti non sono attivi perché questo contenuto serve a mostrare il funzionamento della piattaforma.</span></div>` : `
-      ${wa ? `<a class="btn btn-green btn-block" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno, vi contatto per l’annuncio StudentBnB "+l.id)}" target="_blank" rel="noopener">◉ Contatta su WhatsApp</a>` : ""}
+      ${wa ? `<a class="btn btn-green btn-block" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno, vi contatto per l’annuncio CasaStudent "+l.id)}" target="_blank" rel="noopener">◉ Contatta su WhatsApp</a>` : ""}
       <a class="btn btn-blue btn-block" data-protected-contact href="mailto:${email}?subject=${encodeURIComponent("Richiesta informazioni annuncio "+l.id)}">✉ Invia un’email</a>
       ${phone ? `<a class="btn btn-white btn-block" data-protected-contact href="tel:${phone}">☎ Chiama: ${escapeHtml(l.phone)}</a>` : ""}`;
     return `
@@ -451,7 +451,7 @@
       <div class="detail-footer-grid">
         <section class="info-card"><h2>▣ Disponibilità</h2><strong>Disponibile ${escapeHtml(formatDate(l.availableISO,l.available || ""))}</strong><br><span>Permanenza minima: ${escapeHtml(l.minimumStay || "da concordare")}</span><br><span>Preavviso: ${escapeHtml(l.notice || "da concordare")}</span></section>
         <section class="info-card"><h2>◎ Chi pubblica</h2>${l.isDemo ? `<strong>Profilo dimostrativo</strong><br><span>Dati e date non rappresentano un’offerta reale.</span>` : `<strong>${escapeHtml(l.publisher || "Privato")}</strong>${l.verified ? `<br><span class="verification-badge">✓ Email verificata</span>` : ""}<br><span>Annuncio pubblicato il ${escapeHtml(l.published || "oggi")}</span><br><span>Ultimo aggiornamento: ${escapeHtml(l.updated || "oggi")}</span>`}</section>
-        <section class="info-card"><h2>◇ ID annuncio</h2><strong>#${escapeHtml(l.id)}</strong><br><a href="mailto:segnalazioni@studentbnb.it?subject=${encodeURIComponent("Segnalazione annuncio "+l.id)}" style="color:#1565a8;text-decoration:underline">Segnala annuncio</a></section>
+        <section class="info-card"><h2>◇ ID annuncio</h2><strong>#${escapeHtml(l.id)}</strong><br><a href="mailto:segnalazioni@casastudent.it?subject=${encodeURIComponent("Segnalazione annuncio "+l.id)}" style="color:#1565a8;text-decoration:underline">Segnala annuncio</a></section>
       </div>`;
   }
 
@@ -632,8 +632,8 @@
         </div>
         <div class="request-card-actions">
           ${r.isDemo ? `<span class="demo-contact-inline">Contatti non attivi per i profili di esempio.</span>` : `
-            ${wa ? `<a class="btn btn-green" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno "+r.name+", ti contatto per la tua richiesta su StudentBnB "+r.id)}" target="_blank" rel="noopener">◉ WhatsApp</a>` : ""}
-            ${r.email ? `<a class="btn btn-blue" data-protected-contact href="mailto:${escapeHtml(r.email)}?subject=${encodeURIComponent("Proposta alloggio StudentBnB "+r.id)}">✉ Email</a>` : ""}
+            ${wa ? `<a class="btn btn-green" data-protected-contact href="https://wa.me/${wa}?text=${encodeURIComponent("Buongiorno "+r.name+", ti contatto per la tua richiesta su CasaStudent "+r.id)}" target="_blank" rel="noopener">◉ WhatsApp</a>` : ""}
+            ${r.email ? `<a class="btn btn-blue" data-protected-contact href="mailto:${escapeHtml(r.email)}?subject=${encodeURIComponent("Proposta alloggio CasaStudent "+r.id)}">✉ Email</a>` : ""}
             ${phone ? `<a class="btn btn-white" data-protected-contact href="tel:${escapeHtml(phone)}">☎ Chiama</a>` : ""}`}
         </div>
       </article>`;

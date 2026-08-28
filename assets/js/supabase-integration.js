@@ -456,7 +456,7 @@
       client = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabasePublishableKey, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
       });
-      window.CasaStudentSupabase = client;
+      window.StudentBnBSupabase = client;
 
       const result = await client.auth.getSession();
       session = result.data.session || null;
