@@ -19,3 +19,4 @@
   function addStatsLink(){const label={IT:'Statistiche',ES:'Estadísticas',FR:'Statistiques',DE:'Statistiken',PL:'Statystyki',PT:'Estatísticas'}[code]||'Statistics';const box=document.querySelector('.footer-bottom')||document.querySelector('.footer-international');if(box&&!box.querySelector('[data-stats-link]')){const a=document.createElement('a');a.href='stats.html';a.dataset.statsLink='1';a.textContent=label;a.style.cssText='color:inherit;text-decoration:underline;margin-left:12px';box.appendChild(a);}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addStatsLink);else addStatsLink();
 })();
+(function(){if(document.querySelector('script[data-city-visuals]'))return;const s=document.createElement('script');s.src='assets/js/city-visuals.js?v=20260828';s.defer=true;s.dataset.cityVisuals='1';document.head.appendChild(s)})();
