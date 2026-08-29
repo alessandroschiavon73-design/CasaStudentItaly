@@ -21,7 +21,7 @@
   .city-hero h1,.cs-city-hero h1{color:#fff!important;text-shadow:0 2px 14px rgba(0,0,0,.28);font-size:clamp(38px,6vw,68px)!important;line-height:1!important;margin-bottom:12px!important}
   .city-hero p,.cs-city-hero p{color:#fff!important;max-width:760px;font-size:clamp(16px,2vw,20px)!important;text-shadow:0 1px 8px rgba(0,0,0,.22)}
   @media(max-width:700px){.city-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.city-hero,.cs-city-hero{height:390px!important;min-height:390px!important}.cs-city-media,.city-card.cs-city-visual-card>img,.cs-city-visual-card>.city-photo{height:132px!important;min-height:132px!important}}
-  @media(max-width:430px){.city-grid{grid-template-columns:1fr!important}.cs-city-media,.city-card.cs-city-visual-card>img,.cs-city-visual-card>.city-photo{height:180px!important;min-height:180px!important}}
+  @media(max-width:430px){.city-grid{grid-template-columns:1fr!important}}
   `;
   const st=document.createElement('style');st.id='casastudent-city-visuals-style';st.textContent=css;document.head.appendChild(st);
   function niceName(value){return decodeURIComponent(value||'').replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()).trim();}
