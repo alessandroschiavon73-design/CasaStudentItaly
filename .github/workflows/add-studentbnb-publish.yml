@@ -1,11 +1,14 @@
 name: Add StudentBnB publish option
+
 on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/add-studentbnb-publish.yml'
+      - .github/workflows/add-studentbnb-publish.yml
+
 permissions:
   contents: write
+
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -13,33 +16,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Patch publish form
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('pubblica.html')
-          s=p.read_text()
-          marker='''        <span class="field-label">Quali costi sono compresi?</span>'''
-          block='''        <div class="studentbnb-crosspublish" style="margin:22px 0 18px;padding:18px;border:1px solid #9fd8d2;border-radius:14px;background:#f0fbf9">
-          <label class="check-option" style="font-size:16px;font-weight:800"><input type="checkbox" id="publish-studentbnb" name="publishStudentBnB" value="yes"> Pubblica anche su StudentBnB</label>
-          <p style="margin:8px 0 0;color:#556">Offri questo alloggio anche come soggiorno di prova breve: lo studente può testare casa e coinquilini prima di scegliere definitivamente.</p>
-          <div id="studentbnb-pricing-panel" class="hidden" hidden style="margin-top:16px">
-            <div class="form-grid three">
-              <div class="field"><label for="studentbnb-uplift">Maggiorazione StudentBnB</label><select id="studentbnb-uplift" name="studentbnbUplift"><option value="20">+20%</option><option value="25" selected>+25% consigliato</option><option value="30">+30%</option></select></div>
-              <div class="field"><label for="studentbnb-price-7">7 giorni (€) *</label><input id="studentbnb-price-7" name="studentbnbPrice7" type="number" min="1"></div>
-              <div class="field"><label for="studentbnb-price-14">14 giorni (€) *</label><input id="studentbnb-price-14" name="studentbnbPrice14" type="number" min="1"></div>
-              <div class="field"><label for="studentbnb-price-30">30 giorni (€) *</label><input id="studentbnb-price-30" name="studentbnbPrice30" type="number" min="1"></div>
-            </div>
-            <p id="studentbnb-price-summary" class="micro-note" style="margin-top:8px">I prezzi vengono suggeriti automaticamente dal canone CasaStudent e restano modificabili.</p>
-          </div>
-        </div>
-'''
-          if 'id="publish-studentbnb"' not in s:
-              s=s.replace(marker, block+marker)
-          script='<script src="assets/js/studentbnb-publish.js"></script>\n'
-          if 'studentbnb-publish.js' not in s:
-              s=s.replace('<script src="assets/js/app.js"></script>', '<script src="assets/js/app.js"></script>\n'+script)
-          p.write_text(s)
-          PY
-      - name: Commit
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnA9UGF0aCgicHViYmxpY2EuaHRtbCIpCnM9cC5yZWFkX3RleHQoKQptYXJrZXI9JyAgICAgICAgPHNwYW4gY2xhc3M9ImZpZWxkLWxhYmVsIj5RdWFsaSBjb3N0aSBzb25vIGNvbXByZXNpPzwvc3Bhbj4nCmJsb2NrPScnJyAgICAgICAgPGRpdiBjbGFzcz0ic3R1ZGVudGJuYi1jcm9zc3B1Ymxpc2giIHN0eWxlPSJtYXJnaW46MjJweCAwIDE4cHg7cGFkZGluZzoxOHB4O2JvcmRlcjoxcHggc29saWQgIzlmZDhkMjtib3JkZXItcmFkaXVzOjE0cHg7YmFja2dyb3VuZDojZjBmYmY5Ij4KICAgICAgICAgIDxsYWJlbCBjbGFzcz0iY2hlY2stb3B0aW9uIiBzdHlsZT0iZm9udC1zaXplOjE2cHg7Zm9udC13ZWlnaHQ6ODAwIj48aW5wdXQgdHlwZT0iY2hlY2tib3giIGlkPSJwdWJsaXNoLXN0dWRlbnRibmIiIG5hbWU9InB1Ymxpc2hTdHVkZW50Qm5CIiB2YWx1ZT0ieWVzIj4gUHViYmxpY2EgYW5jaGUgc3UgU3R1ZGVudEJuQjwvbGFiZWw+CiAgICAgICAgICA8cCBzdHlsZT0ibWFyZ2luOjhweCAwIDA7Y29sb3I6IzU1NiI+T2ZmcmkgcXVlc3RvIGFsbG9nZ2lvIGFuY2hlIGNvbWUgc29nZ2lvcm5vIGRpIHByb3ZhIGJyZXZlOiBsbyBzdHVkZW50ZSBwdcOyIHRlc3RhcmUgY2FzYSBlIGNvaW5xdWlsaW5pIHByaW1hIGRpIHNjZWdsaWVyZSBkZWZpbml0aXZhbWVudGUuPC9wPgogICAgICAgICAgPGRpdiBpZD0ic3R1ZGVudGJuYi1wcmljaW5nLXBhbmVsIiBjbGFzcz0iaGlkZGVuIiBoaWRkZW4gc3R5bGU9Im1hcmdpbi10b3A6MTZweCI+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9ImZvcm0tZ3JpZCB0aHJlZSI+CiAgICAgICAgICAgICAgPGRpdiBjbGFzcz0iZmllbGQiPjxsYWJlbCBmb3I9InN0dWRlbnRibmItdXBsaWZ0Ij5NYWdnaW9yYXppb25lIFN0dWRlbnRCbkI8L2xhYmVsPjxzZWxlY3QgaWQ9InN0dWRlbnRibmItdXBsaWZ0IiBuYW1lPSJzdHVkZW50Ym5iVXBsaWZ0Ij48b3B0aW9uIHZhbHVlPSIyMCI+KzIwJTwvb3B0aW9uPjxvcHRpb24gdmFsdWU9IjI1IiBzZWxlY3RlZD4rMjUlIGNvbnNpZ2xpYXRvPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iMzAiPiszMCU8L29wdGlvbj48L3NlbGVjdD48L2Rpdj4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzPSJmaWVsZCI+PGxhYmVsIGZvcj0ic3R1ZGVudGJuYi1wcmljZS03Ij43IGdpb3JuaSAo4oKsKSAqPC9sYWJlbD48aW5wdXQgaWQ9InN0dWRlbnRibmItcHJpY2UtNyIgbmFtZT0ic3R1ZGVudGJuYlByaWNlNyIgdHlwZT0ibnVtYmVyIiBtaW49IjEiPjwvZGl2PgogICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImZpZWxkIj48bGFiZWwgZm9yPSJzdHVkZW50Ym5iLXByaWNlLTE0Ij4xNCBnaW9ybmkgKOKCrCkgKjwvbGFiZWw+PGlucHV0IGlkPSJzdHVkZW50Ym5iLXByaWNlLTE0IiBuYW1lPSJzdHVkZW50Ym5iUHJpY2UxNCIgdHlwZT0ibnVtYmVyIiBtaW49IjEiPjwvZGl2PgogICAgICAgICAgICAgIDxkaXYgY2xhc3M9ImZpZWxkIj48bGFiZWwgZm9yPSJzdHVkZW50Ym5iLXByaWNlLTMwIj4zMCBnaW9ybmkgKOKCrCkgKjwvbGFiZWw+PGlucHV0IGlkPSJzdHVkZW50Ym5iLXByaWNlLTMwIiBuYW1lPSJzdHVkZW50Ym5iUHJpY2UzMCIgdHlwZT0ibnVtYmVyIiBtaW49IjEiPjwvZGl2PgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPHAgaWQ9InN0dWRlbnRibmItcHJpY2Utc3VtbWFyeSIgY2xhc3M9Im1pY3JvLW5vdGUiIHN0eWxlPSJtYXJnaW4tdG9wOjhweCI+SSBwcmV6emkgdmVuZ29ubyBzdWdnZXJpdGkgYXV0b21hdGljYW1lbnRlIGRhbCBjYW5vbmUgQ2FzYVN0dWRlbnQgZSByZXN0YW5vIG1vZGlmaWNhYmlsaS48L3A+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L2Rpdj4KJycnCmlmICdpZD0icHVibGlzaC1zdHVkZW50Ym5iIicgbm90IGluIHM6CiAgICBzPXMucmVwbGFjZShtYXJrZXIsIGJsb2NrK21hcmtlcikKc2NyaXB0X3RhZz0nPHNjcmlwdCBzcmM9ImFzc2V0cy9qcy9zdHVkZW50Ym5iLXB1Ymxpc2guanMiPjwvc2NyaXB0PlxuJwppZiAnc3R1ZGVudGJuYi1wdWJsaXNoLmpzJyBub3QgaW4gczoKICAgIHM9cy5yZXBsYWNlKCc8c2NyaXB0IHNyYz0iYXNzZXRzL2pzL2FwcC5qcyI+PC9zY3JpcHQ+JywgJzxzY3JpcHQgc3JjPSJhc3NldHMvanMvYXBwLmpzIj48L3NjcmlwdD5cbicrc2NyaXB0X3RhZykKcC53cml0ZV90ZXh0KHMpCg==' | base64 -d > /tmp/patch_studentbnb.py
+          python /tmp/patch_studentbnb.py
+      - name: Commit changes
         run: |
           git config user.name 'CasaStudent Bot'
           git config user.email 'actions@github.com'
