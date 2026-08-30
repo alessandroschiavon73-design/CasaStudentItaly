@@ -1,0 +1,50 @@
+name: Add StudentBnB publish option
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/add-studentbnb-publish.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch publish form
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('pubblica.html')
+          s=p.read_text()
+          marker='''        <span class="field-label">Quali costi sono compresi?</span>'''
+          block='''        <div class="studentbnb-crosspublish" style="margin:22px 0 18px;padding:18px;border:1px solid #9fd8d2;border-radius:14px;background:#f0fbf9">
+          <label class="check-option" style="font-size:16px;font-weight:800"><input type="checkbox" id="publish-studentbnb" name="publishStudentBnB" value="yes"> Pubblica anche su StudentBnB</label>
+          <p style="margin:8px 0 0;color:#556">Offri questo alloggio anche come soggiorno di prova breve: lo studente può testare casa e coinquilini prima di scegliere definitivamente.</p>
+          <div id="studentbnb-pricing-panel" class="hidden" hidden style="margin-top:16px">
+            <div class="form-grid three">
+              <div class="field"><label for="studentbnb-uplift">Maggiorazione StudentBnB</label><select id="studentbnb-uplift" name="studentbnbUplift"><option value="20">+20%</option><option value="25" selected>+25% consigliato</option><option value="30">+30%</option></select></div>
+              <div class="field"><label for="studentbnb-price-7">7 giorni (€) *</label><input id="studentbnb-price-7" name="studentbnbPrice7" type="number" min="1"></div>
+              <div class="field"><label for="studentbnb-price-14">14 giorni (€) *</label><input id="studentbnb-price-14" name="studentbnbPrice14" type="number" min="1"></div>
+              <div class="field"><label for="studentbnb-price-30">30 giorni (€) *</label><input id="studentbnb-price-30" name="studentbnbPrice30" type="number" min="1"></div>
+            </div>
+            <p id="studentbnb-price-summary" class="micro-note" style="margin-top:8px">I prezzi vengono suggeriti automaticamente dal canone CasaStudent e restano modificabili.</p>
+          </div>
+        </div>
+'''
+          if 'id="publish-studentbnb"' not in s:
+              s=s.replace(marker, block+marker)
+          script='<script src="assets/js/studentbnb-publish.js"></script>\n'
+          if 'studentbnb-publish.js' not in s:
+              s=s.replace('<script src="assets/js/app.js"></script>', '<script src="assets/js/app.js"></script>\n'+script)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'CasaStudent Bot'
+          git config user.email 'actions@github.com'
+          git add pubblica.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add StudentBnB test-stay cross-publish pricing'
+            git push
+          fi
