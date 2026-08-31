@@ -5,7 +5,8 @@
   const code=cfg.countryCode||document.documentElement.lang?.slice(0,2).toUpperCase()||'EU';
   const key=`studentbnb:stats:${code}:v1`;
   const sessionKey=`studentbnb:session:${code}:v1`;
-  const path=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+  const pathname=location.pathname||'/';
+  const path=(pathname==='/'?'index.html':pathname.replace(/^\/+|\/+$/g,'')||'index.html').toLowerCase();
   const isStats=path==='stats.html';
   const empty=()=>({version:1,country:code,pageViews:0,sessions:0,ctaClicks:0,internalClicks:0,outboundClicks:0,pages:{},firstSeen:null,lastSeen:null});
   function read(){try{return {...empty(),...(JSON.parse(localStorage.getItem(key)||'{}'))};}catch(_){return empty();}}
