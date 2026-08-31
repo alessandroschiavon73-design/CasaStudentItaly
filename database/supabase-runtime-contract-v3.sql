@@ -33,6 +33,7 @@ alter table public.listings
   add column if not exists address text,
   add column if not exists latitude numeric(9,6),
   add column if not exists longitude numeric(9,6),
+  add column if not exists contact_name text,
   add column if not exists contact_whatsapp text,
   add column if not exists contact_telegram text,
   add column if not exists featured boolean not null default false,
@@ -55,7 +56,7 @@ create table if not exists public.favorites (
 
 alter table public.favorites enable row level security;
 revoke all on table public.favorites from anon;
-grant select, insert, delete on table public.favorites to authenticated;
+grant select, insert, update, delete on table public.favorites to authenticated;
 
 drop policy if exists "casastudent favorites own" on public.favorites;
 create policy "casastudent favorites own"
@@ -69,6 +70,14 @@ create policy "casastudent favorites insert own"
 on public.favorites
 for insert
 to authenticated
+with check (user_id = auth.uid());
+
+drop policy if exists "casastudent favorites update own" on public.favorites;
+create policy "casastudent favorites update own"
+on public.favorites
+for update
+to authenticated
+using (user_id = auth.uid())
 with check (user_id = auth.uid());
 
 drop policy if exists "casastudent favorites delete own" on public.favorites;
