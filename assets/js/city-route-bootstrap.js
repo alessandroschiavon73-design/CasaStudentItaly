@@ -9,7 +9,10 @@
   const cleanUrl = new URL(location.href);
   cleanUrl.searchParams.delete("city");
   const runtimeUrl = new URL(location.href);
-  if (!runtimeUrl.searchParams.get("city")) runtimeUrl.searchParams.set("city", slug);
+
+  /* The route path is authoritative. Never allow ?city= to make /bologna/
+     render Milano (or any other mismatched city). */
+  runtimeUrl.searchParams.set("city", slug);
 
   if (runtimeUrl.href !== location.href) history.replaceState(history.state, "", runtimeUrl.href);
 
