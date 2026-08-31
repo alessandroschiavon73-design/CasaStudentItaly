@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://casastudent.it/</loc><lastmod>2026-08-31</lastmod></url>
-  <url><loc>https://casastudent.it/padova.html?city=padova</loc><lastmod>2026-08-31</lastmod></url>
+  <url><loc>https://casastudent.it/padova/</loc><lastmod>2026-08-31</lastmod></url>
+  <url><loc>https://casastudent.it/bologna/</loc><lastmod>2026-08-31</lastmod></url>
+  <url><loc>https://casastudent.it/milano/</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=ancona</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=bari</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=bergamo</loc><lastmod>2026-08-31</lastmod></url>
-  <url><loc>https://casastudent.it/padova.html?city=bologna</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=cagliari</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=caserta</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=catania</loc><lastmod>2026-08-31</lastmod></url>
@@ -15,7 +16,6 @@
   <url><loc>https://casastudent.it/padova.html?city=firenze</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=genova</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=messina</loc><lastmod>2026-08-31</lastmod></url>
-  <url><loc>https://casastudent.it/padova.html?city=milano</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=modena</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=napoli</loc><lastmod>2026-08-31</lastmod></url>
   <url><loc>https://casastudent.it/padova.html?city=palermo</loc><lastmod>2026-08-31</lastmod></url>
