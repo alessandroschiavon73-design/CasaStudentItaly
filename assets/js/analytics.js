@@ -77,3 +77,16 @@
 })();
 
 (function(){if(document.querySelector('script[data-city-visuals]'))return;const s=document.createElement('script');s.src='assets/js/city-visuals.js?v=20260831-seo-routes';s.defer=true;s.dataset.cityVisuals='1';document.head.appendChild(s)})();
+
+(function(){
+  if(window.__CASASTUDENT_PUBLIC_CLEANUP__) return;
+  window.__CASASTUDENT_PUBLIC_CLEANUP__=true;
+  const normalize=s=>(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+  function fixBrand(){document.querySelectorAll('.brand').forEach(brand=>{const labels=[...brand.children].filter(el=>el.tagName==='SPAN'&&!el.classList.contains('brand-icon'));const label=labels[labels.length-1];if(!label)return;const small=label.querySelector('small');const smallHtml=small?small.outerHTML:'';label.innerHTML=`Casa<strong>Student</strong>${smallHtml}`;});}
+  function cleanFooterLinks(){const banned=new Set(['faq','domande frequenti','preguntas frecuentes','questions fréquentes','häufige fragen','häufig gestellte fragen','kontakt','contact','contatti','contactos','contato']);document.querySelectorAll('.site-footer .footer-links a').forEach(a=>{if(banned.has(normalize(a.textContent)))a.remove();});}
+  function removeTechNotes(){const rx=/(countrycode|backend europeo|database europea|base de données européenne|europäische datenbank|europejska baza danych|base de dados europeia|nota sul prototipo|nota del prototipo|note sur le prototype|hinweis zum prototyp|uwaga.{0,20}prototyp|nota sobre o protótipo)/i;document.querySelectorAll('p,small,.note,.hint,.helper-text').forEach(el=>{if(rx.test(el.textContent||''))el.remove();});}
+  function ensurePortugal(){let nav=document.querySelector('#casastudent-network-title')?.closest('.portal-family')?.querySelector('.portal-country-links');if(!nav)nav=document.querySelector('.footer-international [data-network]');if(!nav||nav.querySelector('a[href*="casastudent.pt"]'))return;const a=document.createElement('a');a.href='https://casastudent.pt/';a.className=nav.classList.contains('portal-country-links')?'portal-country-link':'';a.innerHTML='<span class="portal-country-flag" aria-hidden="true">🇵🇹</span><span>Portugal</span><span class="network-open" aria-hidden="true">↗</span>';nav.appendChild(a);}
+  function run(){fixBrand();cleanFooterLinks();removeTechNotes();ensurePortugal();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+  setTimeout(run,250);setTimeout(run,1000);
+})();
