@@ -11,6 +11,23 @@
     active: city.active !== false
   }));
   const ZONES = window.STUDENTBNB_ZONES || {};
+  const CITY_IMAGES = Object.freeze({
+    ancona: "assets/img/ancona-piazza.webp",
+    bari: "assets/img/citta-bari-hero.webp",
+    bologna: "assets/img/bologna-torri.webp",
+    cagliari: "assets/img/cagliari-panorama.webp",
+    firenze: "assets/img/firenze-duomo.webp",
+    milano: "assets/img/milano-duomo.webp",
+    napoli: "assets/img/citta-napoli.webp",
+    padova: "assets/img/padova-palazzo-ragione.webp",
+    palermo: "assets/img/citta-palermo-hero.webp",
+    pisa: "assets/img/pisa-piazza-dei-miracoli.webp",
+    roma: "assets/img/roma-colosseo.webp",
+    torino: "assets/img/torino-mole.webp",
+    trento: "assets/img/citta-trento-hero.webp",
+    trieste: "assets/img/trieste-piazza.webp"
+  });
+  const NEUTRAL_CITY_IMAGE = "assets/img/camera.webp";
 
   const qs = (s, root=document) => root.querySelector(s);
   const qsa = (s, root=document) => [...root.querySelectorAll(s)];
@@ -33,6 +50,34 @@
 
   function listingCitySlug(listing){
     return citySlugFromValue(listing.citySlug || listing.city || CONFIG.defaultCity) || CONFIG.defaultCity;
+  }
+
+  async function loadRemoteCityPhoto(citySlug, cityName, hero){
+    if(!hero || CITY_IMAGES[citySlug]) return;
+    try {
+      const cacheKey = `casastudent-city-photo:${citySlug}:v3`;
+      let photoUrl = sessionStorage.getItem(cacheKey);
+      if(!photoUrl){
+        const wikiTitles = {
+          "cosenza-rende":"Cosenza",
+          "salerno-fisciano":"Salerno",
+          "reggio-emilia":"Reggio Emilia"
+        };
+        const title = wikiTitles[citySlug] || cityName;
+        const endpoint = `https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+        const response = await fetch(endpoint,{mode:"cors",credentials:"omit"});
+        if(!response.ok) throw new Error(`Wikipedia ${response.status}`);
+        const data = await response.json();
+        photoUrl = data?.originalimage?.source || data?.thumbnail?.source || "";
+        if(photoUrl) sessionStorage.setItem(cacheKey,photoUrl);
+      }
+      if(photoUrl){
+        hero.style.backgroundImage = `url("${photoUrl}")`;
+        hero.classList.add("city-photo-loaded");
+      }
+    } catch (_) {
+      /* The neutral local image remains visible when the remote fallback fails. */
+    }
   }
 
   function cityOptions(selected=""){
@@ -266,8 +311,7 @@
     const city = cityBySlug(requestedCity);
     const citySlug = city.slug;
     const cityName = city.name;
-    const cityImageSlugs = new Set(["bologna","firenze","milano","napoli","padova","pisa","roma","torino"]);
-    const heroImage = citySlug === "padova" ? "assets/img/padova-hero.webp" : cityImageSlugs.has(citySlug) ? `assets/img/citta-${citySlug}.webp` : "assets/img/italia-proposta1.webp";
+    const heroImage = CITY_IMAGES[citySlug] || NEUTRAL_CITY_IMAGE;
     document.title = `Alloggi per studenti a ${cityName} | CasaStudent`;
     const seoDescription = `Stanze, posti letto e appartamenti per studenti a ${cityName}, con costi, spese e condizioni confrontabili.`;
     const metaDescription = qs('meta[name="description"]');
@@ -276,7 +320,12 @@
     if(qs("#city-breadcrumb")) qs("#city-breadcrumb").textContent = cityName;
     if(qs("#city-name")) qs("#city-name").textContent = cityName;
     if(qs("#city-description")) qs("#city-description").textContent = `Scopri gli alloggi nelle zone universitarie di ${cityName}. Ogni offerta evidenzia costi, spese e condizioni contrattuali.`;
-    if(qs(".city-hero-bg")) qs(".city-hero-bg").style.backgroundImage = `url('${heroImage}')`;
+    const hero = qs(".city-hero-bg");
+    if(hero){
+      hero.style.backgroundImage = `url('${heroImage}')`;
+      hero.dataset.cityImageSource = CITY_IMAGES[citySlug] ? "curated" : "fallback";
+      loadRemoteCityPhoto(citySlug,cityName,hero);
+    }
     const controls = {
       zone: qs("#filter-zone"),
       type: qs("#filter-type"),

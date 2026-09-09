@@ -16,44 +16,6 @@
 
   if (runtimeUrl.href !== location.href) history.replaceState(history.state, "", runtimeUrl.href);
 
-  const wikiTitles = {
-    "cosenza-rende": "Cosenza",
-    "salerno-fisciano": "Salerno",
-    "reggio-emilia": "Reggio Emilia"
-  };
-
-  const cityTitle = wikiTitles[slug] || slug
-    .split("-")
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-
-  const applyCityPhoto = async () => {
-    const hero = document.querySelector(".city-hero");
-    const bg = hero?.querySelector(".city-hero-bg");
-    if (!bg) return;
-
-    try {
-      const cacheKey = `casastudent-city-photo:${slug}:v2`;
-      let photoUrl = sessionStorage.getItem(cacheKey);
-
-      if (!photoUrl) {
-        const endpoint = `https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cityTitle)}`;
-        const response = await fetch(endpoint, { mode: "cors", credentials: "omit" });
-        if (!response.ok) throw new Error(`Wikipedia ${response.status}`);
-        const data = await response.json();
-        photoUrl = data?.originalimage?.source || data?.thumbnail?.source || "";
-        if (photoUrl) sessionStorage.setItem(cacheKey, photoUrl);
-      }
-
-      if (photoUrl) {
-        bg.style.backgroundImage = `url("${photoUrl}")`;
-        bg.classList.add("city-photo-loaded");
-      }
-    } catch (_) {
-      /* Keep the local image as a safe fallback when the remote source is unavailable. */
-    }
-  };
-
   const restoreCleanUrl = () => {
     history.replaceState(history.state, "", cleanUrl.href);
     document.title = originalTitle;
@@ -86,7 +48,6 @@
   };
 
   const init = () => {
-    applyCityPhoto();
     setTimeout(restoreCleanUrl, 0);
   };
 
