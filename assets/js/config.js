@@ -35,7 +35,7 @@ window.STUDENTBNB_CONFIG = Object.freeze({
     "default-src 'self'",
     "script-src 'self' https://cdn.jsdelivr.net",
     `connect-src 'self' ${supabaseOrigin} ${supabaseWs}`,
-    `img-src 'self' data: blob: ${supabaseOrigin}`,
+    `img-src 'self' data: blob: ${supabaseOrigin} https://studentbnb.it https://images.unsplash.com`,
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
     "media-src 'self' blob:",
