@@ -12,17 +12,21 @@ on:
       - 'database/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   check-supabase:
     runs-on: ubuntu-latest
 
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Read public Supabase frontend configuration
+      - name: Read frontend Supabase URL
         id: config
         shell: bash
         run: |
@@ -31,17 +35,90 @@ jobs:
           from pathlib import Path
           text = Path('assets/js/config.js').read_text(encoding='utf-8')
           url = re.search(r'supabaseUrl:\s*"([^"]+)"', text)
-          key = re.search(r'supabasePublishableKey:\s*"([^"]+)"', text)
-          if not url or not key:
-              raise SystemExit('Supabase URL or publishable key missing from assets/js/config.js')
+          if not url:
+              raise SystemExit('Supabase URL missing from assets/js/config.js')
           print(f'url={url.group(1)}')
-          print(f'key={key.group(1)}')
           PY
+
+      - name: Resolve current public API key securely
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ] || [ -z "${SUPABASE_PROJECT_REF:-}" ]; then
+            echo "SUPABASE_ACCESS_TOKEN or SUPABASE_PROJECT_REF GitHub secret is missing."
+            exit 1
+          fi
+
+          EXPECTED_REF=$(python - <<'PY'
+          import re
+          from pathlib import Path
+          text=Path('assets/js/config.js').read_text(encoding='utf-8')
+          url=re.search(r'supabaseUrl:\s*"https://([a-z0-9]+)\.supabase\.co"', text)
+          print(url.group(1) if url else '')
+          PY
+          )
+          if [ "$EXPECTED_REF" != "$SUPABASE_PROJECT_REF" ]; then
+            echo "Configured Supabase URL and SUPABASE_PROJECT_REF do not point to the same project."
+            exit 1
+          fi
+
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/api-keys?reveal=true" \
+            -o /tmp/supabase-api-keys.json
+
+          python - <<'PY' > /tmp/public-key.txt
+          import json
+          from pathlib import Path
+          rows=json.loads(Path('/tmp/supabase-api-keys.json').read_text())
+          candidates=[]
+          for row in rows:
+              key=row.get('api_key') or row.get('key') or ''
+              typ=(row.get('type') or '').lower()
+              name=(row.get('name') or row.get('id') or '').lower()
+              if key.startswith('sb_publishable_'):
+                  candidates.insert(0,key)
+              elif name=='anon' or typ=='anon':
+                  candidates.append(key)
+          key=next((k for k in candidates if k), '')
+          if not key:
+              raise SystemExit('No usable publishable/anon API key returned by Supabase')
+          print(key)
+          PY
+
+          SUPABASE_PUBLIC_KEY=$(cat /tmp/public-key.txt)
+          echo "::add-mask::$SUPABASE_PUBLIC_KEY"
+          echo "SUPABASE_PUBLIC_KEY=$SUPABASE_PUBLIC_KEY" >> "$GITHUB_ENV"
+          rm -f /tmp/public-key.txt /tmp/supabase-api-keys.json
+
+      - name: Synchronize frontend public key
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os,re
+          from pathlib import Path
+          path=Path('assets/js/config.js')
+          text=path.read_text(encoding='utf-8')
+          key=os.environ['SUPABASE_PUBLIC_KEY']
+          updated,n=re.subn(r'(supabasePublishableKey:\s*")[^"]+("[,])', r'\1'+key+r'\2', text, count=1)
+          if n != 1:
+              raise SystemExit('Could not update supabasePublishableKey in assets/js/config.js')
+          path.write_text(updated, encoding='utf-8')
+          PY
+
+          if ! git diff --quiet -- assets/js/config.js; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add assets/js/config.js
+            git commit -m "Sync current Supabase public API key"
+            git push origin HEAD:main
+          fi
 
       - name: Check public database contract
         env:
           SUPABASE_URL: ${{ steps.config.outputs.url }}
-          SUPABASE_KEY: ${{ steps.config.outputs.key }}
+          SUPABASE_KEY: ${{ env.SUPABASE_PUBLIC_KEY }}
         shell: bash
         run: |
           set -euo pipefail
