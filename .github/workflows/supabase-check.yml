@@ -41,6 +41,7 @@ jobs:
           PY
 
       - name: Complete schema and apply runtime contract
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           set -euo pipefail
@@ -107,15 +108,17 @@ jobs:
           import json
           from pathlib import Path
           rows=json.loads(Path('/tmp/supabase-api-keys.json').read_text())
-          candidates=[]
+          publishable=[]
+          legacy=[]
           for row in rows:
               key=row.get('api_key') or row.get('key') or ''
               typ=(row.get('type') or '').lower()
               name=(row.get('name') or row.get('id') or '').lower()
               if key.startswith('sb_publishable_'):
-                  candidates.append(('publishable',key))
+                  publishable.append(('publishable',key))
               elif key and (name=='anon' or typ=='anon'):
-                  candidates.append(('anon',key))
+                  legacy.append(('anon',key))
+          candidates=publishable+legacy
           if not candidates:
               raise SystemExit('No publishable or legacy anon key returned by Supabase')
           Path('/tmp/public-candidates.json').write_text(json.dumps(candidates))
