@@ -40,7 +40,7 @@ jobs:
           print(f'url={url.group(1)}')
           PY
 
-      - name: Apply runtime contract and database grants
+      - name: Complete schema and apply runtime contract
         shell: bash
         run: |
           set -euo pipefail
@@ -66,11 +66,12 @@ jobs:
             fi
           }
 
+          apply_sql database/schema.sql
           apply_sql database/supabase-runtime-contract-v3.sql
           apply_sql database/supabase-privacy-hardening.sql
           apply_sql database/supabase-security-hardening-v2.sql
           apply_sql database/supabase-public-access-grants-v1.sql
-          echo "Runtime contract, privacy/RLS hardening and grants applied."
+          echo "Base schema, runtime contract, privacy/RLS hardening and grants applied."
           rm -f /tmp/db-query.json /tmp/db-query-response.json
 
       - name: Resolve a working public API key securely
