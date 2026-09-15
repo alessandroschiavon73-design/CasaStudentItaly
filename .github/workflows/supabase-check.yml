@@ -40,7 +40,9 @@ jobs:
           print(f'url={url.group(1)}')
           PY
 
-      - name: Resolve current public API key securely
+      - name: Resolve a working public API key securely
+        env:
+          SUPABASE_URL: ${{ steps.config.outputs.url }}
         shell: bash
         run: |
           set -euo pipefail
@@ -67,7 +69,7 @@ jobs:
             "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/api-keys?reveal=true" \
             -o /tmp/supabase-api-keys.json
 
-          python - <<'PY' > /tmp/public-key.txt
+          python - <<'PY'
           import json
           from pathlib import Path
           rows=json.loads(Path('/tmp/supabase-api-keys.json').read_text())
@@ -77,19 +79,45 @@ jobs:
               typ=(row.get('type') or '').lower()
               name=(row.get('name') or row.get('id') or '').lower()
               if key.startswith('sb_publishable_'):
-                  candidates.insert(0,key)
-              elif name=='anon' or typ=='anon':
-                  candidates.append(key)
-          key=next((k for k in candidates if k), '')
-          if not key:
-              raise SystemExit('No usable publishable/anon API key returned by Supabase')
-          print(key)
+                  candidates.append(('publishable',key))
+              elif key and (name=='anon' or typ=='anon'):
+                  candidates.append(('anon',key))
+          if not candidates:
+              raise SystemExit('No publishable or legacy anon key returned by Supabase')
+          Path('/tmp/public-candidates.json').write_text(json.dumps(candidates))
+          PY
+
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          url=os.environ['SUPABASE_URL'].rstrip('/')
+          candidates=json.loads(Path('/tmp/public-candidates.json').read_text())
+          working=None
+          for kind,key in candidates:
+              cmd=['curl','--silent','--show-error','--output','/tmp/candidate-response.json','--write-out','%{http_code}',
+                   '-H',f'apikey: {key}','-H','Accept: application/json']
+              if kind=='anon':
+                  cmd += ['-H',f'Authorization: Bearer {key}']
+              cmd += [f'{url}/rest/v1/cities?select=id&country_code=eq.IT&active=eq.true&limit=1']
+              result=subprocess.run(cmd,capture_output=True,text=True,check=False)
+              status=result.stdout.strip()
+              if status.startswith('2'):
+                  working=(kind,key)
+                  break
+          if not working:
+              raise SystemExit('Neither publishable nor legacy anon key can read the cities endpoint')
+          kind,key=working
+          Path('/tmp/public-key.txt').write_text(key)
+          Path('/tmp/public-key-kind.txt').write_text(kind)
           PY
 
           SUPABASE_PUBLIC_KEY=$(cat /tmp/public-key.txt)
+          SUPABASE_PUBLIC_KEY_KIND=$(cat /tmp/public-key-kind.txt)
           echo "::add-mask::$SUPABASE_PUBLIC_KEY"
           echo "SUPABASE_PUBLIC_KEY=$SUPABASE_PUBLIC_KEY" >> "$GITHUB_ENV"
-          rm -f /tmp/public-key.txt /tmp/supabase-api-keys.json
+          echo "SUPABASE_PUBLIC_KEY_KIND=$SUPABASE_PUBLIC_KEY_KIND" >> "$GITHUB_ENV"
+          echo "Working public credential type: $SUPABASE_PUBLIC_KEY_KIND"
+          rm -f /tmp/public-key.txt /tmp/public-key-kind.txt /tmp/public-candidates.json /tmp/candidate-response.json /tmp/supabase-api-keys.json
 
       - name: Synchronize frontend public key
         shell: bash
@@ -111,7 +139,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add assets/js/config.js
-            git commit -m "Sync current Supabase public API key"
+            git commit -m "Sync working Supabase public API key"
             git push origin HEAD:main
           fi
 
@@ -119,6 +147,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ steps.config.outputs.url }}
           SUPABASE_KEY: ${{ env.SUPABASE_PUBLIC_KEY }}
+          SUPABASE_KEY_KIND: ${{ env.SUPABASE_PUBLIC_KEY_KIND }}
         shell: bash
         run: |
           set -euo pipefail
@@ -126,10 +155,11 @@ jobs:
             local resource="$1"
             local query="$2"
             echo "Checking $resource"
-            response=$(curl --fail-with-body --silent --show-error \
-              -H "apikey: $SUPABASE_KEY" \
-              -H "Accept: application/json" \
-              "$SUPABASE_URL/rest/v1/$resource?$query")
+            args=(--fail-with-body --silent --show-error -H "apikey: $SUPABASE_KEY" -H "Accept: application/json")
+            if [ "$SUPABASE_KEY_KIND" = "anon" ]; then
+              args+=(-H "Authorization: Bearer $SUPABASE_KEY")
+            fi
+            response=$(curl "${args[@]}" "$SUPABASE_URL/rest/v1/$resource?$query")
             python - "$resource" "$response" <<'PY'
           import json, sys
           resource, payload = sys.argv[1], sys.argv[2]
