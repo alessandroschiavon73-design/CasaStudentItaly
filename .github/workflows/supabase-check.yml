@@ -51,7 +51,6 @@ jobs:
             echo "Checking $resource"
             response=$(curl --fail-with-body --silent --show-error \
               -H "apikey: $SUPABASE_KEY" \
-              -H "Authorization: Bearer $SUPABASE_KEY" \
               -H "Accept: application/json" \
               "$SUPABASE_URL/rest/v1/$resource?$query")
             python - "$resource" "$response" <<'PY'
@@ -72,6 +71,6 @@ jobs:
         shell: bash
         run: |
           grep -q 'apiMode: "supabase"' assets/js/config.js
-          grep -q 'from("public_listings")\|listingSource = session?.user ? "listings" : "public_listings"' assets/js/supabase-integration.js
+          grep -q 'listingSource = session?.user ? "listings" : "public_listings"' assets/js/supabase-integration.js
           grep -q 'public_student_requests' assets/js/supabase-integration.js
           echo "CasaStudent frontend Supabase contract: OK"
