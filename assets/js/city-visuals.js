@@ -4,6 +4,25 @@
   const lang=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
   const copy={it:'Alloggi, stanze e vita universitaria',fr:'Logements, chambres et vie étudiante',de:'Wohnen, Zimmer und Studentenleben',es:'Alojamiento, habitaciones y vida universitaria',pl:'Mieszkania, pokoje i życie studenckie',en:'Student housing, rooms and university life'}[lang]||'Student housing, rooms and university life';
   const heroCopy={it:'Scopri alloggi per studenti, quartieri universitari e opportunità nella città.',fr:'Découvrez les logements étudiants, les quartiers universitaires et les opportunités de la ville.',de:'Entdecke Studentenunterkünfte, Hochschulviertel und Möglichkeiten in der Stadt.',es:'Descubre alojamiento para estudiantes, barrios universitarios y oportunidades en la ciudad.',pl:'Odkryj mieszkania studenckie, dzielnice akademickie i możliwości w mieście.',en:'Discover student housing, university districts and opportunities in the city.'}[lang]||'Discover student housing, university districts and opportunities in the city.';
+
+  /* Single approved photo set shared with studentbnb.it. */
+  const cityPhotos={
+    milano:'https://studentbnb.it/assets/img/milano-duomo.webp',
+    roma:'https://studentbnb.it/assets/img/roma-colosseo.webp',
+    napoli:'https://images.unsplash.com/photo-1773600876856-338c2e99cd45?auto=format&fit=crop&fm=webp&q=82&w=2400',
+    torino:'https://studentbnb.it/assets/img/torino-mole.webp',
+    bologna:'https://studentbnb.it/assets/img/bologna-torri.webp',
+    padova:'https://studentbnb.it/assets/img/padova-palazzo-ragione.webp',
+    firenze:'https://studentbnb.it/assets/img/firenze-duomo.webp',
+    pisa:'https://studentbnb.it/assets/img/pisa-piazza-dei-miracoli.webp',
+    palermo:'https://images.unsplash.com/photo-1774244764179-f34b65061ec6?auto=format&fit=crop&fm=webp&q=82&w=2400',
+    bari:'https://images.unsplash.com/photo-1564863756233-e90e6d2f264b?auto=format&fit=crop&fm=webp&q=82&w=2400',
+    cagliari:'https://studentbnb.it/assets/img/cagliari-panorama.webp',
+    ancona:'https://studentbnb.it/assets/img/ancona-piazza.webp',
+    trieste:'https://studentbnb.it/assets/img/trieste-piazza.webp'
+  };
+  window.CASASTUDENT_CITY_PHOTOS=Object.freeze({...cityPhotos});
+
   const fallback='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8edf1"/><stop offset="1" stop-color="#bcc8d1"/></linearGradient></defs><rect width="1200" height="675" fill="url(#g)"/><g fill="#ffffff" opacity=".78"><rect x="150" y="330" width="180" height="210" rx="8"/><rect x="370" y="245" width="230" height="295" rx="8"/><rect x="640" y="295" width="170" height="245" rx="8"/><rect x="850" y="205" width="205" height="335" rx="8"/></g><path d="M80 540h1040" stroke="#ffffff" stroke-width="18" stroke-linecap="round" opacity=".82"/></svg>`);
   const css=`
   .city-grid{grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:14px!important}
@@ -25,14 +44,26 @@
   `;
   const st=document.createElement('style');st.id='casastudent-city-visuals-style';st.textContent=css;document.head.appendChild(st);
   function niceName(value){return decodeURIComponent(value||'').replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()).trim();}
+  function cardSlug(card){
+    try{
+      const u=new URL(card.href,location.href);
+      const q=(u.searchParams.get('city')||'').toLowerCase().trim();
+      if(q)return q;
+      const parts=u.pathname.split('/').filter(Boolean);
+      return (parts[parts.length-1]||'').toLowerCase().trim();
+    }catch(_){return '';}
+  }
   function imageFallback(img){if(!img||img.dataset.csFallbackBound)return;img.dataset.csFallbackBound='1';const fail=()=>{if(img.src!==fallback){img.src=fallback;img.removeAttribute('srcset');img.dataset.csFallback='1';}};img.addEventListener('error',fail,{once:true});if(img.complete&&!img.naturalWidth)fail();}
   function enhanceCard(card){if(!card||card.dataset.csVisualized)return;card.dataset.csVisualized='1';card.classList.add('cs-city-visual-card');
-    let img=card.querySelector('img');if(img)imageFallback(img);else if(!card.querySelector('.city-photo')){img=document.createElement('img');img.className='cs-city-media';img.src=fallback;img.alt='';card.prepend(img);}
+    let img=card.querySelector('img');
+    if(!img&&!card.querySelector('.city-photo')){img=document.createElement('img');img.className='cs-city-media';img.src=fallback;img.alt='';card.prepend(img);}
+    const slug=cardSlug(card);if(img&&cityPhotos[slug]){img.src=cityPhotos[slug];img.removeAttribute('srcset');img.loading='lazy';img.decoding='async';}
+    if(img)imageFallback(img);
     const strong=card.querySelector('strong');const firstText=[...card.querySelectorAll('span')].find(s=>!s.classList.contains('city-count')&&!s.closest('.city-photo'))?.textContent?.trim();let name=strong?.textContent?.trim()||firstText;
     if(!name){try{name=niceName(new URL(card.href,location.href).searchParams.get('city'))}catch(_){name='City'}}
     if(!card.querySelector('.cs-city-card-copy')){const box=document.createElement('div');box.className='cs-city-card-copy';const title=document.createElement('strong');title.textContent=name||'City';const text=document.createElement('span');text.textContent=copy;box.append(title,text);card.appendChild(box);}
   }
-  function enhanceHero(){const hero=document.querySelector('.city-hero');if(hero){hero.querySelectorAll('img').forEach(imageFallback);const bg=hero.querySelector('.city-hero-bg');if(bg){const m=(bg.style.backgroundImage||'').match(/url\(["']?(.*?)["']?\)/);if(m&&m[1]){const probe=new Image();probe.onerror=()=>{bg.style.backgroundImage=`url("${fallback}")`};probe.src=m[1];}}return;}
+  function enhanceHero(){const hero=document.querySelector('.city-hero');if(hero){hero.querySelectorAll('img').forEach(imageFallback);const bg=hero.querySelector('.city-hero-bg');if(bg){const slug=(document.body.dataset.citySlug||new URLSearchParams(location.search).get('city')||'').toLowerCase();if(cityPhotos[slug])bg.style.setProperty('background-image',`url("${cityPhotos[slug]}")`,'important');const m=(bg.style.backgroundImage||'').match(/url\(["']?(.*?)["']?\)/);if(m&&m[1]){const probe=new Image();probe.onerror=()=>{bg.style.backgroundImage=`url("${fallback}")`};probe.src=m[1];}}return;}
     const params=new URLSearchParams(location.search);const city=params.get('city');if(!city)return;const euHero=document.querySelector('.content-header');if(!euHero)return;euHero.classList.add('cs-city-hero');euHero.querySelectorAll('img').forEach(imageFallback);const h1=euHero.querySelector('h1');if(h1)h1.textContent=niceName(city);const p=euHero.querySelector('p');if(p&&!p.textContent.trim())p.textContent=heroCopy;}
   function run(){document.querySelectorAll('.city-card,#city-cards a[href],.country-column a[href*="city="]').forEach(enhanceCard);enhanceHero();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
