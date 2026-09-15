@@ -40,35 +40,37 @@ jobs:
           print(f'url={url.group(1)}')
           PY
 
-      - name: Apply required database grants
+      - name: Apply runtime contract and database grants
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json
+          apply_sql() {
+            local file="$1"
+            echo "Applying $file"
+            SQL_FILE="$file" python - <<'PY'
+          import json, os
           from pathlib import Path
-          sql=Path('database/supabase-public-access-grants-v1.sql').read_text(encoding='utf-8')
+          sql=Path(os.environ['SQL_FILE']).read_text(encoding='utf-8')
           Path('/tmp/db-query.json').write_text(json.dumps({'query':sql,'read_only':False}))
           PY
-          status=$(curl --silent --show-error --output /tmp/db-query-response.json --write-out '%{http_code}' \
-            -X POST \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data-binary @/tmp/db-query.json \
-            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")
-          if [[ "$status" != 2* ]]; then
-            echo "Applying database grants failed with HTTP $status"
-            python - <<'PY'
-          import re
-          from pathlib import Path
-          body=Path('/tmp/db-query-response.json').read_text(errors='replace') if Path('/tmp/db-query-response.json').exists() else ''
-          body=re.sub(r'sb_[A-Za-z0-9_-]+','[redacted-key]',body)
-          body=re.sub(r'eyJ[A-Za-z0-9._-]+','[redacted-jwt]',body)
-          print(body[:1000])
-          PY
-            exit 1
-          fi
-          echo "Required database grants applied/confirmed."
+            status=$(curl --silent --show-error --output /tmp/db-query-response.json --write-out '%{http_code}' \
+              -X POST \
+              -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data-binary @/tmp/db-query.json \
+              "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")
+            if [[ "$status" != 2* ]]; then
+              echo "$file failed with HTTP $status"
+              cat /tmp/db-query-response.json
+              exit 1
+            fi
+          }
+
+          apply_sql database/supabase-runtime-contract-v3.sql
+          apply_sql database/supabase-privacy-hardening.sql
+          apply_sql database/supabase-security-hardening-v2.sql
+          apply_sql database/supabase-public-access-grants-v1.sql
+          echo "Runtime contract, privacy/RLS hardening and grants applied."
           rm -f /tmp/db-query.json /tmp/db-query-response.json
 
       - name: Resolve a working public API key securely
