@@ -12,7 +12,7 @@ window.STUDENTBNB_CONFIG = Object.freeze({
   apiMode: "supabase",
   apiBase: "/api/v1",
   supabaseUrl: "https://etyvaugscofodkhklqqz.supabase.co",
-  supabasePublishableKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0eXZhdWdzY29mb2RraGtscXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4Mjk3NzQsImV4cCI6MjEwMzQwNTc3NH0.GKLl68ACI9oNBLbs-JP3-JEe4igQdMSgnJMmHQ3cxVk",
+  supabasePublishableKey: "sb_publishable_MJiby1pof0ghYnw1UMx-jQ_bpQKyd0L",
   unifiedDatabase: true,
   schemaVersion: "1.4"
 });
