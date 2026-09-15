@@ -40,6 +40,42 @@ jobs:
           print(f'url={url.group(1)}')
           PY
 
+      - name: Diagnose Supabase project services
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/health" \
+            -o /tmp/health.json || true
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/health.json')
+          if not p.exists():
+              print('Project health: unavailable')
+              raise SystemExit(0)
+          try: data=json.loads(p.read_text())
+          except Exception:
+              print('Project health: unreadable')
+              raise SystemExit(0)
+          print('Project health summary:')
+          if isinstance(data,list):
+              for row in data:
+                  if isinstance(row,dict):
+                      label=row.get('name') or row.get('service') or row.get('component') or 'service'
+                      status=row.get('status') or row.get('healthy') or row.get('state') or 'unknown'
+                      print(f'- {label}: {status}')
+          elif isinstance(data,dict):
+              for k,v in data.items():
+                  if isinstance(v,(str,bool,int,float)):
+                      print(f'- {k}: {v}')
+                  elif isinstance(v,dict):
+                      status=v.get('status') or v.get('healthy') or v.get('state')
+                      if status is not None: print(f'- {k}: {status}')
+          PY
+          rm -f /tmp/health.json
+
       - name: Resolve a working public API key securely
         env:
           SUPABASE_URL: ${{ steps.config.outputs.url }}
@@ -74,21 +110,24 @@ jobs:
           from pathlib import Path
           rows=json.loads(Path('/tmp/supabase-api-keys.json').read_text())
           candidates=[]
+          print('Public-key metadata returned by Supabase:')
           for row in rows:
               key=row.get('api_key') or row.get('key') or ''
               typ=(row.get('type') or '').lower()
               name=(row.get('name') or row.get('id') or '').lower()
               if key.startswith('sb_publishable_'):
                   candidates.append(('publishable',key))
+                  print(f"- publishable name={name or 'n/a'} length={len(key)} status={row.get('status','n/a')}")
               elif key and (name=='anon' or typ=='anon'):
                   candidates.append(('anon',key))
+                  print(f"- anon length={len(key)} status={row.get('status','n/a')}")
           if not candidates:
               raise SystemExit('No publishable or legacy anon key returned by Supabase')
           Path('/tmp/public-candidates.json').write_text(json.dumps(candidates))
           PY
 
           python - <<'PY'
-          import json, os, subprocess
+          import json, os, re, subprocess
           from pathlib import Path
           url=os.environ['SUPABASE_URL'].rstrip('/')
           candidates=json.loads(Path('/tmp/public-candidates.json').read_text())
@@ -101,6 +140,10 @@ jobs:
               cmd += [f'{url}/rest/v1/cities?select=id&country_code=eq.IT&active=eq.true&limit=1']
               result=subprocess.run(cmd,capture_output=True,text=True,check=False)
               status=result.stdout.strip()
+              body=Path('/tmp/candidate-response.json').read_text(errors='replace') if Path('/tmp/candidate-response.json').exists() else ''
+              body=re.sub(r'sb_[A-Za-z0-9_-]+','[redacted-key]',body)
+              body=re.sub(r'eyJ[A-Za-z0-9._-]+','[redacted-jwt]',body)
+              print(f'{kind} Data API probe: HTTP {status}; response={body[:400]}')
               if status.startswith('2'):
                   working=(kind,key)
                   break
