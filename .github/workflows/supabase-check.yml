@@ -40,41 +40,36 @@ jobs:
           print(f'url={url.group(1)}')
           PY
 
-      - name: Diagnose Supabase project services
+      - name: Apply required database grants
         shell: bash
         run: |
           set -euo pipefail
-          curl --silent --show-error \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/health" \
-            -o /tmp/health.json || true
           python - <<'PY'
           import json
           from pathlib import Path
-          p=Path('/tmp/health.json')
-          if not p.exists():
-              print('Project health: unavailable')
-              raise SystemExit(0)
-          try: data=json.loads(p.read_text())
-          except Exception:
-              print('Project health: unreadable')
-              raise SystemExit(0)
-          print('Project health summary:')
-          if isinstance(data,list):
-              for row in data:
-                  if isinstance(row,dict):
-                      label=row.get('name') or row.get('service') or row.get('component') or 'service'
-                      status=row.get('status') or row.get('healthy') or row.get('state') or 'unknown'
-                      print(f'- {label}: {status}')
-          elif isinstance(data,dict):
-              for k,v in data.items():
-                  if isinstance(v,(str,bool,int,float)):
-                      print(f'- {k}: {v}')
-                  elif isinstance(v,dict):
-                      status=v.get('status') or v.get('healthy') or v.get('state')
-                      if status is not None: print(f'- {k}: {status}')
+          sql=Path('database/supabase-public-access-grants-v1.sql').read_text(encoding='utf-8')
+          Path('/tmp/db-query.json').write_text(json.dumps({'query':sql,'read_only':False}))
           PY
-          rm -f /tmp/health.json
+          status=$(curl --silent --show-error --output /tmp/db-query-response.json --write-out '%{http_code}' \
+            -X POST \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @/tmp/db-query.json \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query")
+          if [[ "$status" != 2* ]]; then
+            echo "Applying database grants failed with HTTP $status"
+            python - <<'PY'
+          import re
+          from pathlib import Path
+          body=Path('/tmp/db-query-response.json').read_text(errors='replace') if Path('/tmp/db-query-response.json').exists() else ''
+          body=re.sub(r'sb_[A-Za-z0-9_-]+','[redacted-key]',body)
+          body=re.sub(r'eyJ[A-Za-z0-9._-]+','[redacted-jwt]',body)
+          print(body[:1000])
+          PY
+            exit 1
+          fi
+          echo "Required database grants applied/confirmed."
+          rm -f /tmp/db-query.json /tmp/db-query-response.json
 
       - name: Resolve a working public API key securely
         env:
@@ -110,17 +105,14 @@ jobs:
           from pathlib import Path
           rows=json.loads(Path('/tmp/supabase-api-keys.json').read_text())
           candidates=[]
-          print('Public-key metadata returned by Supabase:')
           for row in rows:
               key=row.get('api_key') or row.get('key') or ''
               typ=(row.get('type') or '').lower()
               name=(row.get('name') or row.get('id') or '').lower()
               if key.startswith('sb_publishable_'):
                   candidates.append(('publishable',key))
-                  print(f"- publishable name={name or 'n/a'} length={len(key)} status={row.get('status','n/a')}")
               elif key and (name=='anon' or typ=='anon'):
                   candidates.append(('anon',key))
-                  print(f"- anon length={len(key)} status={row.get('status','n/a')}")
           if not candidates:
               raise SystemExit('No publishable or legacy anon key returned by Supabase')
           Path('/tmp/public-candidates.json').write_text(json.dumps(candidates))
@@ -140,15 +132,14 @@ jobs:
               cmd += [f'{url}/rest/v1/cities?select=id&country_code=eq.IT&active=eq.true&limit=1']
               result=subprocess.run(cmd,capture_output=True,text=True,check=False)
               status=result.stdout.strip()
-              body=Path('/tmp/candidate-response.json').read_text(errors='replace') if Path('/tmp/candidate-response.json').exists() else ''
-              body=re.sub(r'sb_[A-Za-z0-9_-]+','[redacted-key]',body)
-              body=re.sub(r'eyJ[A-Za-z0-9._-]+','[redacted-jwt]',body)
-              print(f'{kind} Data API probe: HTTP {status}; response={body[:400]}')
               if status.startswith('2'):
                   working=(kind,key)
                   break
           if not working:
-              raise SystemExit('Neither publishable nor legacy anon key can read the cities endpoint')
+              body=Path('/tmp/candidate-response.json').read_text(errors='replace') if Path('/tmp/candidate-response.json').exists() else ''
+              body=re.sub(r'sb_[A-Za-z0-9_-]+','[redacted-key]',body)
+              body=re.sub(r'eyJ[A-Za-z0-9._-]+','[redacted-jwt]',body)
+              raise SystemExit(f'No public key can read cities. Last response: {body[:400]}')
           kind,key=working
           Path('/tmp/public-key.txt').write_text(key)
           Path('/tmp/public-key-kind.txt').write_text(kind)
