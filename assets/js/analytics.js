@@ -73,3 +73,20 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
   setTimeout(run,300);
 })();
+
+/* Supabase is the only valid authentication source in production.
+   Remove the legacy form-bound localStorage login listener installed by app.js
+   on every page, while keeping the document-level Supabase Auth bridge active. */
+(function(){
+  const cfg=window.STUDENTBNB_CONFIG||{};
+  if(cfg.apiMode!=='supabase') return;
+  function enforceSupabaseAuth(){
+    const legacy=document.getElementById('login-form');
+    if(!legacy||legacy.dataset.supabaseAuthOnly==='true') return;
+    const clean=legacy.cloneNode(true);
+    clean.dataset.supabaseAuthOnly='true';
+    legacy.replaceWith(clean);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',enforceSupabaseAuth,{once:true});
+  else enforceSupabaseAuth();
+})();
