@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // CasaStudent uses Supabase Auth on the publish page. app.js still contains
+  // a legacy local-only login listener kept for static/demo builds; cloning the
+  // form here removes that obsolete form-bound listener while preserving the
+  // real Supabase document-level authentication bridge.
+  if (window.STUDENTBNB_CONFIG?.apiMode === 'supabase') {
+    const legacyLoginForm = document.getElementById('login-form');
+    if (legacyLoginForm && legacyLoginForm.dataset.supabaseAuthOnly !== 'true') {
+      const cleanLoginForm = legacyLoginForm.cloneNode(true);
+      cleanLoginForm.dataset.supabaseAuthOnly = 'true';
+      legacyLoginForm.replaceWith(cleanLoginForm);
+    }
+  }
+
   const toggle = document.getElementById('publish-studentbnb');
   const panel = document.getElementById('studentbnb-pricing-panel');
   const monthly = document.getElementById('price');
