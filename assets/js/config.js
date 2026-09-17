@@ -14,6 +14,7 @@ window.STUDENTBNB_CONFIG = Object.freeze({
   supabaseUrl: "https://etyvaugscofodkhklqqz.supabase.co",
   supabasePublishableKey: "sb_publishable_MJiby1pof0ghYnw1UMx-jQ_bpQKyd0L",
   unifiedDatabase: true,
+  ga4MeasurementId: "G-36JTCQS3LB",
   schemaVersion: "1.4"
 });
 
@@ -33,9 +34,9 @@ window.STUDENTBNB_CONFIG = Object.freeze({
   }
   csp.content = [
     "default-src 'self'",
-    "script-src 'self' https://cdn.jsdelivr.net",
-    `connect-src 'self' ${supabaseOrigin} ${supabaseWs}`,
-    `img-src 'self' data: blob: ${supabaseOrigin} https://studentbnb.it https://images.unsplash.com`,
+    "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com",
+    `connect-src 'self' ${supabaseOrigin} ${supabaseWs} https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com`,
+    `img-src 'self' data: blob: ${supabaseOrigin} https://studentbnb.it https://images.unsplash.com https://www.google-analytics.com`,
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self' data:",
     "media-src 'self' blob:",
@@ -54,6 +55,21 @@ window.STUDENTBNB_CONFIG = Object.freeze({
     document.head.appendChild(referrer);
   }
   referrer.content = "strict-origin-when-cross-origin";
+})();
+
+(function installGoogleAnalytics(){
+  const cfg = window.STUDENTBNB_CONFIG || {};
+  const measurementId = cfg.ga4MeasurementId;
+  if(!measurementId || document.querySelector('script[data-casastudent-ga4]')) return;
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', measurementId);
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
+  s.dataset.casastudentGa4 = '1';
+  document.head.appendChild(s);
 })();
 
 (function () {
