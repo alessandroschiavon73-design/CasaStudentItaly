@@ -63,6 +63,11 @@
   text-shadow:0 1px 4px rgba(0,0,0,.30)!important;
 }
 
+/* The map-back button is no longer shown on any city page. */
+body[data-city-slug] .city-hero a.btn[href="/"]{
+  display:none!important;
+}
+
 /* Until there is enough inventory to make filtering useful, show every
    listing on city pages, exactly as on StudentBnB Italy. */
 body[data-city-slug] .filters,
