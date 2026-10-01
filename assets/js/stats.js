@@ -30,7 +30,7 @@
     authPanel?.classList.add('hidden');
     dashboard?.classList.remove('hidden');
     const {data,error}=await client.from('analytics_events')
-      .select('occurred_at,event_name,path,anonymous_session_id,visitor_id,referrer_host')
+      .select('occurred_at,event_name,path,anonymous_session_id,visitor_id,referrer_host,country_code')
       .gte('occurred_at',start30.toISOString())
       .order('occurred_at',{ascending:false})
       .limit(10000);
@@ -50,6 +50,13 @@
     setText('outbound-clicks',rows.filter(r=>r.event_name==='outbound_click').length);
     setText('referrers',new Set(views.map(r=>r.referrer_host).filter(Boolean)).size);
     setText('range-label',`Ultimi 30 giorni · aggiornato ${new Intl.DateTimeFormat('it-IT',{dateStyle:'short',timeStyle:'short'}).format(new Date())}`);
+
+    const countryCounts={};
+    views.forEach(r=>{const code=r.country_code||'EU';if(!countryCounts[code])countryCounts[code]={views:0,sessions:new Set()};countryCounts[code].views++;countryCounts[code].sessions.add(r.anonymous_session_id)});
+    const countryLabels={EU:'Europa',IT:'Italia',ES:'Spagna',FR:'Francia',DE:'Germania',PL:'Polonia',PT:'Portogallo',IE:'Irlanda',UK:'Regno Unito',BE:'Belgio',NL:'Paesi Bassi',DK:'Danimarca',NO:'Norvegia',SE:'Svezia',FI:'Finlandia',CZ:'Cechia',AT:'Austria',CH:'Svizzera',HU:'Ungheria',SK:'Slovacchia',RO:'Romania',BG:'Bulgaria',GR:'Grecia',EE:'Estonia',LV:'Lettonia',LT:'Lituania',AL:'Albania',AD:'Andorra',BY:'Bielorussia',BA:'Bosnia-Erzegovina',HR:'Croazia',CY:'Cipro',IS:'Islanda',XK:'Kosovo',LU:'Lussemburgo',MT:'Malta',MD:'Moldova',MC:'Monaco',ME:'Montenegro',MK:'Macedonia del Nord',RS:'Serbia',SI:'Slovenia',TR:'Turchia',UA:'Ucraina',VA:'Città del Vaticano',SM:'San Marino',LI:'Liechtenstein',RU:'Russia',AM:'Armenia',AZ:'Azerbaigian',GE:'Georgia'};
+    const countryRows=Object.entries(countryCounts).sort((a,b)=>b[1].views-a[1].views);
+    const countryRoot=document.getElementById('country-traffic');
+    if(countryRoot){const maxCountry=countryRows[0]?.[1].views||1;countryRoot.innerHTML=countryRows.length?countryRows.map(([code,stat])=>{const label=countryLabels[code]||code;return '<div class="bar-row"><span>'+escapeHtml(label)+'</span><div class="bar-track"><div class="bar-fill" style="width:'+Math.max(4,Math.round(stat.views/maxCountry*100))+'%"></div></div><strong>'+stat.views+' visite · '+stat.sessions.size+' sessioni</strong></div>'}).join(''):'<p class="muted">Nessuna visita registrata ancora.</p>'}
 
     const counts={};
     views.forEach(r=>{counts[r.path]=(counts[r.path]||0)+1});
